@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AlertTriangle, ShieldAlert, ShieldCheck, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,7 +64,7 @@ const ThreatsPanel: React.FC = () => {
             <span>Network Security Score</span>
             <span className="font-medium">72/100</span>
           </div>
-          <Progress value={72} className="h-2 bg-secondary" indicatorClassName="bg-security-alert" />
+          <Progress value={72} className="h-2 bg-secondary" />
         </div>
         
         <div className="mt-4">

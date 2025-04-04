@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { WifiIcon, Server, Laptop, Smartphone, DeviceTablet, Router } from 'lucide-react';
+import { WifiIcon, Server, Laptop, Smartphone, Tablet, Router } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const NetworkMap: React.FC = () => {
@@ -33,7 +33,7 @@ const NetworkMap: React.FC = () => {
                 <Server className="h-6 w-6 text-security-light" />
               </div>
               <div className="absolute bottom-10 left-5 animate-pulse-slow">
-                <DeviceTablet className="h-5 w-5 text-security-light" />
+                <Tablet className="h-5 w-5 text-security-light" />
               </div>
             </div>
           </div>

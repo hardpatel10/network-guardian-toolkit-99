@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Laptop, Smartphone, Server, DeviceTablet, Router, MoreVertical, Shield, AlertTriangle } from 'lucide-react';
+import { Laptop, Smartphone, Server, Tablet, Router, MoreVertical, Shield, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ const deviceIcons = {
   laptop: Laptop,
   smartphone: Smartphone,
   server: Server,
-  tablet: DeviceTablet,
+  tablet: Tablet,
   router: Router,
 };
 
