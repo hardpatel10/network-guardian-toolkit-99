@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, ShieldAlert, ShieldCheck, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { apiService, NetworkDevice } from '@/services/apiService';
 
 interface ThreatItemProps {
   title: string;
@@ -52,6 +54,80 @@ const ThreatItem: React.FC<ThreatItemProps> = ({
 };
 
 const ThreatsPanel: React.FC = () => {
+  const [securityScore, setSecurityScore] = useState(100);
+  const [threats, setThreats] = useState<ThreatItemProps[]>([]);
+  
+  useEffect(() => {
+    const fetchThreats = async () => {
+      try {
+        const scanResult = await apiService.getNetworkScan();
+        const devices = scanResult.devices || [];
+        
+        // Generate threats based on scan results
+        const newThreats: ThreatItemProps[] = [];
+        let score = 100;
+        
+        // Check for devices with open ports
+        devices.forEach((device) => {
+          if (device.open_ports && device.open_ports.length > 0) {
+            const criticalPorts = [22, 23, 25, 445, 3389]; // SSH, Telnet, SMTP, SMB, RDP
+            const hasCriticalPort = device.open_ports.some(p => criticalPorts.includes(p.port));
+            
+            if (hasCriticalPort) {
+              // Critical port found
+              score -= 15;
+              const criticalPort = device.open_ports.find(p => criticalPorts.includes(p.port));
+              newThreats.push({
+                title: `Critical Port Detected`,
+                description: `Port ${criticalPort?.port} (${criticalPort?.service}) is open on ${device.hostname || device.ip}`,
+                severity: 'high',
+                time: 'Now'
+              });
+            } else {
+              // Non-critical open ports
+              score -= 5;
+              newThreats.push({
+                title: `Open Ports Detected`,
+                description: `${device.open_ports.length} open ports on ${device.hostname || device.ip}`,
+                severity: 'medium',
+                time: 'Now'
+              });
+            }
+          }
+        });
+        
+        // Check for unknown devices
+        const unknownDevices = devices.filter(d => d.hostname === 'Unknown' || d.manufacturer === 'Unknown');
+        if (unknownDevices.length > 0) {
+          score -= 10;
+          newThreats.push({
+            title: "Unknown Devices Detected",
+            description: `${unknownDevices.length} devices with unidentified hostname or manufacturer`,
+            severity: 'medium',
+            time: 'Now'
+          });
+        }
+        
+        // Ensure score stays between 0-100
+        setSecurityScore(Math.max(0, Math.min(100, score)));
+        setThreats(newThreats);
+        
+      } catch (error) {
+        console.error("Error fetching threats:", error);
+        // Set default threats if API fails
+        setThreats([{
+          title: "Scan Error",
+          description: "Could not complete security assessment",
+          severity: 'medium',
+          time: 'Now'
+        }]);
+        setSecurityScore(50);
+      }
+    };
+    
+    fetchThreats();
+  }, []);
+
   return (
     <Card className="security-card">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -62,24 +138,28 @@ const ThreatsPanel: React.FC = () => {
         <div className="mb-4">
           <div className="flex justify-between mb-1 text-sm">
             <span>Network Security Score</span>
-            <span className="font-medium">72/100</span>
+            <span className="font-medium">{securityScore}/100</span>
           </div>
-          <Progress value={72} className="h-2 bg-secondary" />
+          <Progress value={securityScore} className="h-2 bg-secondary" />
         </div>
         
         <div className="mt-4">
-          <ThreatItem 
-            title="Unauthorized Device" 
-            description="Unknown device with MAC FF:EE:DD:CC:BB:AA connected"
-            severity="high"
-            time="5 min ago"
-          />
-          <ThreatItem 
-            title="Open Port Detected" 
-            description="Port 22 (SSH) is open on Media Server"
-            severity="medium"
-            time="30 min ago"
-          />
+          {threats.length > 0 ? (
+            threats.map((threat, index) => (
+              <ThreatItem 
+                key={index}
+                title={threat.title}
+                description={threat.description}
+                severity={threat.severity}
+                time={threat.time}
+              />
+            ))
+          ) : (
+            <div className="flex items-center justify-center py-4 text-security-safe">
+              <ShieldCheck className="h-5 w-5 mr-2" />
+              <span>No threats detected</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
