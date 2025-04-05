@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Laptop, Smartphone, Server, Tablet, Router, MoreVertical, Shield, AlertTriangle, Loader2, WifiIcon } from 'lucide-react';
+import { Laptop, Smartphone, Server, Tablet, Router, MoreVertical, Shield, AlertTriangle, Loader2, WifiIcon, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
@@ -33,7 +33,7 @@ const DeviceList: React.FC = () => {
   const fetchDevices = async () => {
     setIsLoading(true);
     try {
-      const result = await apiService.getNetworkScan();
+      const result = await apiService.triggerScan();
       setDevices(result.devices || []);
       setCurrentIp(result.current_ip || '');
       setNetworkRange(result.network_range || '');
@@ -79,6 +79,33 @@ const DeviceList: React.FC = () => {
     return 'laptop';
   };
 
+  // Download current scan results as JSON
+  const downloadJSON = () => {
+    const scanData = {
+      timestamp: new Date().toISOString(),
+      current_ip: currentIp,
+      network_range: networkRange,
+      devices: devices
+    };
+    
+    const jsonStr = JSON.stringify(scanData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `network_scan_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Download Complete",
+      description: "Scan results have been downloaded as JSON file",
+    });
+  };
+
   return (
     <Card className="security-card">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -90,20 +117,30 @@ const DeviceList: React.FC = () => {
             </p>
           )}
         </div>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={fetchDevices}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Scanning...
-            </>
-          ) : (
-            <>Scan Now</>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={downloadJSON}
+            disabled={devices.length === 0 || isLoading}
+          >
+            <Download className="h-4 w-4 mr-1" /> Export JSON
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={fetchDevices}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Scanning...
+              </>
+            ) : (
+              <>Scan Now</>
+            )}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {devices.length > 0 ? (
@@ -123,7 +160,7 @@ const DeviceList: React.FC = () => {
                 const DeviceIcon = deviceIcons[deviceType];
                 const hasOpenPorts = device.open_ports && device.open_ports.length > 0;
                 const StatusIcon = hasOpenPorts ? AlertTriangle : Shield;
-                const statusClassName = hasOpenPorts ? 'text-security-alert' : 'text-security-safe';
+                const statusClassName = hasOpenPorts ? 'text-amber-500' : 'text-emerald-500';
                 
                 return (
                   <TableRow key={`${device.ip}-${index}`}>
