@@ -4,7 +4,6 @@ import { AlertTriangle, ShieldAlert, ShieldCheck, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { apiService, NetworkDevice } from '@/services/apiService';
-import { cn } from '@/lib/utils';
 
 interface ThreatItemProps {
   title: string;
@@ -57,11 +56,9 @@ const ThreatItem: React.FC<ThreatItemProps> = ({
 const ThreatsPanel: React.FC = () => {
   const [securityScore, setSecurityScore] = useState(100);
   const [threats, setThreats] = useState<ThreatItemProps[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchThreats = async () => {
-      setIsLoading(true);
       try {
         const scanResult = await apiService.getNetworkScan();
         const devices = scanResult.devices || [];
@@ -73,7 +70,7 @@ const ThreatsPanel: React.FC = () => {
         // Check for devices with open ports
         devices.forEach((device) => {
           if (device.open_ports && device.open_ports.length > 0) {
-            const criticalPorts = [22, 23, 25, 445, 3389, 80, 8080]; // SSH, Telnet, SMTP, SMB, RDP, HTTP
+            const criticalPorts = [22, 23, 25, 445, 3389]; // SSH, Telnet, SMTP, SMB, RDP
             const hasCriticalPort = device.open_ports.some(p => criticalPorts.includes(p.port));
             
             if (hasCriticalPort) {
@@ -86,11 +83,11 @@ const ThreatsPanel: React.FC = () => {
                 severity: 'high',
                 time: 'Now'
               });
-            } else if (device.open_ports.length > 3) {
-              // Non-critical but multiple open ports
+            } else {
+              // Non-critical open ports
               score -= 5;
               newThreats.push({
-                title: `Multiple Open Ports`,
+                title: `Open Ports Detected`,
                 description: `${device.open_ports.length} open ports on ${device.hostname || device.ip}`,
                 severity: 'medium',
                 time: 'Now'
@@ -100,29 +97,13 @@ const ThreatsPanel: React.FC = () => {
         });
         
         // Check for unknown devices
-        const unknownDevices = devices.filter(d => !d.hostname || d.hostname === 'Unknown' || !d.manufacturer || d.manufacturer === 'Unknown');
+        const unknownDevices = devices.filter(d => d.hostname === 'Unknown' || d.manufacturer === 'Unknown');
         if (unknownDevices.length > 0) {
           score -= 10;
           newThreats.push({
             title: "Unknown Devices Detected",
             description: `${unknownDevices.length} devices with unidentified hostname or manufacturer`,
             severity: 'medium',
-            time: 'Now'
-          });
-        }
-
-        // Check for outdated OS
-        const outdatedOsDevices = devices.filter(d => {
-          const osInfo = d.os?.toLowerCase() || '';
-          return osInfo.includes('xp') || osInfo.includes('vista') || osInfo.includes('2003') || osInfo.includes('2000');
-        });
-        
-        if (outdatedOsDevices.length > 0) {
-          score -= 20;
-          newThreats.push({
-            title: "Outdated Operating Systems",
-            description: `${outdatedOsDevices.length} devices running outdated and insecure operating systems`,
-            severity: 'high',
             time: 'Now'
           });
         }
@@ -141,8 +122,6 @@ const ThreatsPanel: React.FC = () => {
           time: 'Now'
         }]);
         setSecurityScore(50);
-      } finally {
-        setIsLoading(false);
       }
     };
     
@@ -159,36 +138,13 @@ const ThreatsPanel: React.FC = () => {
         <div className="mb-4">
           <div className="flex justify-between mb-1 text-sm">
             <span>Network Security Score</span>
-            <span className={cn(
-              "font-medium",
-              securityScore >= 80 ? "text-security-safe" : 
-              securityScore >= 50 ? "text-security-alert" : 
-              "text-security-danger"
-            )}>
-              {securityScore}/100
-            </span>
+            <span className="font-medium">{securityScore}/100</span>
           </div>
-          <Progress 
-            value={securityScore} 
-            className={cn(
-              "h-2",
-              securityScore >= 80 ? "bg-secondary" : "bg-secondary/50"
-            )}
-          />
+          <Progress value={securityScore} className="h-2 bg-secondary" />
         </div>
         
         <div className="mt-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-pulse flex space-x-4 w-full">
-                <div className="flex-1 space-y-4">
-                  <div className="h-4 bg-secondary rounded"></div>
-                  <div className="h-10 bg-secondary/50 rounded"></div>
-                  <div className="h-10 bg-secondary/50 rounded"></div>
-                </div>
-              </div>
-            </div>
-          ) : threats.length > 0 ? (
+          {threats.length > 0 ? (
             threats.map((threat, index) => (
               <ThreatItem 
                 key={index}
