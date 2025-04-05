@@ -3,80 +3,119 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import radar animation styles */
+@import './styles/radar.css';
+ 
 @layer base {
   :root {
-    --background: 210 100% 10%;
-    --foreground: 210 10% 98%;
-
-    --card: 210 40% 14%;
-    --card-foreground: 210 10% 98%;
-
-    --popover: 210 40% 14%;
-    --popover-foreground: 210 10% 98%;
-
-    --primary: 200 98% 35%;
-    --primary-foreground: 210 10% 98%;
-
-    --secondary: 210 40% 20%;
-    --secondary-foreground: 210 10% 98%;
-
-    --muted: 210 40% 20%;
-    --muted-foreground: 210 20% 75%;
-
-    --accent: 194 83% 44%;
-    --accent-foreground: 210 10% 98%;
-
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 10% 98%;
-
-    --border: 210 40% 20%;
-    --input: 210 40% 20%;
-    --ring: 200 98% 35%;
-
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-  }
 
+    /* Security Status Colors */
+    --security-light: 145 50% 70%;
+    --security-DEFAULT: 145 50% 50%;
+    --security-safe: 145 63% 42%;
+    --security-alert: 38 92% 50%;
+    --security-danger: 0 84% 60%;
+    --security-neutral: 220 14% 65%;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    /* Security Status Colors - Dark Mode */
+    --security-light: 145 50% 60%;
+    --security-DEFAULT: 145 50% 40%;
+    --security-safe: 145 63% 42%;
+    --security-alert: 38 92% 50%;
+    --security-danger: 0 84% 60%;
+    --security-neutral: 220 14% 65%;
+  }
+}
+ 
+@layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer components {
-  .security-card {
-    @apply bg-card rounded-lg border border-border/50 shadow-md p-4 overflow-hidden transition-all duration-300 hover:shadow-lg;
-  }
+/* Status colors for the security cards */
+.status-secure {
+  @apply text-security-safe font-medium text-sm;
+}
 
-  .security-panel {
-    @apply bg-card/80 backdrop-blur-sm rounded-lg border border-border/30 shadow-md;
-  }
-  
-  .status-badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
-  }
-  
-  .status-secure {
-    @apply bg-security-safe/20 text-security-safe status-badge;
-  }
-  
-  .status-warning {
-    @apply bg-security-alert/20 text-security-alert status-badge;
-  }
-  
-  .status-danger {
-    @apply bg-security-danger/20 text-security-danger status-badge;
-  }
-  
-  .status-neutral {
-    @apply bg-security-neutral/20 text-security-neutral status-badge;
-  }
-  
-  .radar-indicator {
-    @apply absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 rounded-full;
-    background: conic-gradient(from 0deg, rgba(14, 165, 233, 0) 0%, rgba(14, 165, 233, 0.5) 50%, rgba(14, 165, 233, 0) 100%);
-  }
+.status-warning {
+  @apply text-security-alert font-medium text-sm;
+}
+
+.status-danger {
+  @apply text-security-danger font-medium text-sm;
+}
+
+.status-neutral {
+  @apply text-security-neutral font-medium text-sm;
+}
+
+.security-card {
+  @apply overflow-hidden relative;
+}
+
+.security-card::before {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-1;
+}
+
+.security-card:has(.status-secure)::before {
+  @apply bg-security-safe;
+}
+
+.security-card:has(.status-warning)::before {
+  @apply bg-security-alert;
+}
+
+.security-card:has(.status-danger)::before {
+  @apply bg-security-danger;
+}
+
+.security-card:has(.status-neutral)::before {
+  @apply bg-security-neutral;
 }
