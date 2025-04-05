@@ -1,26 +1,46 @@
-# Welcome to your Lovable project
+
+# Network Guardian Toolkit
+
+A comprehensive network security monitoring tool that allows you to scan your network, detect devices, monitor threats, and analyze security vulnerabilities.
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/21ef615f-38ff-4bd1-8a81-b8e6562a870b
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Real-time network scanning and device detection
+- Security threat analysis and monitoring
+- Port scanning and vulnerability assessment
+- Device history tracking
+- Network traffic monitoring
+- Security recommendations
+- Data visualization and reporting
 
-**Use Lovable**
+## Backend Requirements
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/21ef615f-38ff-4bd1-8a81-b8e6562a870b) and start prompting.
+The Network Guardian Toolkit uses a Python Flask backend for network scanning. To run the backend:
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Make sure you have Python 3.7+ installed
+2. Install the required dependencies:
+```sh
+pip install -r requirements.txt
+```
+3. Run the backend server:
+```sh
+python backend/network_scanner.py
+```
 
-**Use your preferred IDE**
+Note: The backend requires administrator/root privileges to perform network scanning operations.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Required System Dependencies
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- nmap (Network Mapper) must be installed on your system
+- For Windows users: WinPcap or Npcap is required
 
-Follow these steps:
+## Frontend Development
+
+Follow these steps to run the frontend:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
@@ -36,38 +56,34 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Technologies Used
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Frontend
+- React with TypeScript
+- Vite for fast builds
+- shadcn-ui for component library
+- Tailwind CSS for styling
+- Recharts for data visualization
 
-**Use GitHub Codespaces**
+### Backend
+- Python Flask for the API server
+- python-nmap for network scanning
+- SQLite for data storage
+- asyncio for asynchronous operations
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## How to Deploy
 
-## What technologies are used for this project?
+1. Start the backend server (see Backend Requirements)
+2. Deploy the frontend through Lovable or your preferred hosting service
+3. Make sure the API_BASE_URL in src/services/apiService.ts points to your backend server
 
-This project is built with:
+## Custom Domain Setup
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/21ef615f-38ff-4bd1-8a81-b8e6562a870b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+To connect a domain, navigate to Project > Settings > Domains in Lovable and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Security Notice
+
+This tool is designed for network administrators and security professionals to monitor their own networks. 
+Using this tool to scan networks without permission is unauthorized and potentially illegal.
