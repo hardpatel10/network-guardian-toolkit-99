@@ -1,208 +1,265 @@
 
 import React, { useState, useEffect } from 'react';
-import { Laptop, Smartphone, Server, Tablet, Router, MoreVertical, Shield, AlertTriangle, Loader2, WifiIcon, Download } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
-import { NetworkDevice, apiService } from '@/services/apiService';
-
-// Define device types and their icons
-const deviceIcons: Record<string, React.ElementType> = {
-  laptop: Laptop,
-  smartphone: Smartphone,
-  server: Server,
-  tablet: Tablet,
-  router: Router,
-};
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiService, NetworkDevice } from '@/services/apiService';
+import { 
+  Search, 
+  RefreshCw, 
+  Download, 
+  Loader2, 
+  Wifi, 
+  ShieldAlert, 
+  Shield
+} from 'lucide-react';
 
 const DeviceList: React.FC = () => {
   const [devices, setDevices] = useState<NetworkDevice[]>([]);
+  const [filteredDevices, setFilteredDevices] = useState<NetworkDevice[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentIp, setCurrentIp] = useState('');
-  const [networkRange, setNetworkRange] = useState('');
+  const [sortColumn, setSortColumn] = useState<keyof NetworkDevice>('ip');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
 
   const fetchDevices = async () => {
     setIsLoading(true);
     try {
-      const result = await apiService.triggerScan();
-      setDevices(result.devices || []);
-      setCurrentIp(result.current_ip || '');
-      setNetworkRange(result.network_range || '');
+      const result = await apiService.getNetworkScan();
+      if (result.devices) {
+        setDevices(result.devices);
+        setFilteredDevices(result.devices);
+      }
       toast({
-        title: "Network Scan Complete",
-        description: `Found ${result.devices.length} devices on your network`,
+        title: "Scan complete",
+        description: `Found ${result.devices?.length || 0} devices on your network`
       });
     } catch (error) {
       console.error('Error fetching devices:', error);
       toast({
-        title: "Scan Failed",
-        description: "Could not complete the network scan. Check your connection.",
-        variant: "destructive",
+        title: "Error",
+        description: "Failed to scan network devices",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initial fetch on component mount
+  const exportDeviceData = () => {
+    const dataStr = JSON.stringify({ data: { devices } }, null, 2);
+    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+    
+    const exportFileDefaultName = `network_scan_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    toast({
+      title: "Export successful",
+      description: "Device data has been exported as JSON"
+    });
+  };
+
   useEffect(() => {
     fetchDevices();
   }, []);
 
-  // Determine device type based on hostname and manufacturer
-  const getDeviceType = (device: NetworkDevice): keyof typeof deviceIcons => {
-    const hostname = device.hostname.toLowerCase();
-    const manufacturer = device.manufacturer.toLowerCase();
-    
-    if (['router', 'gateway', 'modem'].some(term => hostname.includes(term)) || 
-        hostname === 'main router') {
-      return 'router';
-    } else if (['server', 'nas'].some(term => hostname.includes(term))) {
-      return 'server';
-    } else if (['iphone', 'android', 'phone', 'mobile'].some(term => 
-        hostname.includes(term) || manufacturer.includes(term))) {
-      return 'smartphone';
-    } else if (['ipad', 'tablet', 'surface'].some(term => 
-        hostname.includes(term) || manufacturer.includes(term))) {
-      return 'tablet';
+  useEffect(() => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const filtered = devices.filter(device => 
+        device.hostname?.toLowerCase().includes(term) ||
+        device.ip?.toLowerCase().includes(term) ||
+        device.mac?.toLowerCase().includes(term) ||
+        device.manufacturer?.toLowerCase().includes(term) ||
+        device.os?.toLowerCase().includes(term)
+      );
+      setFilteredDevices(filtered);
+    } else {
+      setFilteredDevices(devices);
     }
-    
-    return 'laptop';
+  }, [searchTerm, devices]);
+
+  const handleSort = (column: keyof NetworkDevice) => {
+    if (sortColumn === column) {
+      // Toggle sort direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
   };
 
-  // Download current scan results as JSON
-  const downloadJSON = () => {
-    const scanData = {
-      timestamp: new Date().toISOString(),
-      current_ip: currentIp,
-      network_range: networkRange,
-      devices: devices
-    };
+  const sortedDevices = [...filteredDevices].sort((a, b) => {
+    const aValue = a[sortColumn] || '';
+    const bValue = b[sortColumn] || '';
     
-    const jsonStr = JSON.stringify(scanData, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
     
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `network_scan_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Fallback for non-string values
+    return sortDirection === 'asc'
+      ? String(aValue).localeCompare(String(bValue))
+      : String(bValue).localeCompare(String(aValue));
+  });
+
+  const getSecurityStatus = (device: NetworkDevice) => {
+    const hasCriticalPort = device.open_ports?.some(port => 
+      [21, 22, 23, 3389, 445, 135].includes(port.port)
+    );
     
-    toast({
-      title: "Download Complete",
-      description: "Scan results have been downloaded as JSON file",
-    });
+    if (hasCriticalPort) {
+      return <Badge variant="destructive" className="flex items-center gap-1">
+        <ShieldAlert className="h-3 w-3" /> At Risk
+      </Badge>;
+    }
+    
+    if ((device.open_ports?.length || 0) > 3) {
+      return <Badge variant="outline" className="flex items-center gap-1 border-orange-400 text-orange-400">
+        <Shield className="h-3 w-3" /> Warning
+      </Badge>;
+    }
+    
+    return <Badge variant="outline" className="flex items-center gap-1 border-green-400 text-green-400">
+      <Shield className="h-3 w-3" /> Secure
+    </Badge>;
   };
 
   return (
-    <Card className="security-card">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
-          <CardTitle className="text-sm font-medium">Connected Devices</CardTitle>
-          {networkRange && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Network range: {networkRange} | Your IP: {currentIp}
-            </p>
-          )}
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search devices..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            size="sm"
-            onClick={downloadJSON}
-            disabled={devices.length === 0 || isLoading}
+            onClick={exportDeviceData}
+            disabled={isLoading || devices.length === 0}
+            className="whitespace-nowrap"
           >
-            <Download className="h-4 w-4 mr-1" /> Export JSON
+            <Download className="mr-2 h-4 w-4" />
+            Export JSON
           </Button>
           <Button 
-            variant="outline" 
-            size="sm"
             onClick={fetchDevices}
             disabled={isLoading}
+            className="whitespace-nowrap"
           >
             {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Scanning...
-              </>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <>Scan Now</>
+              <RefreshCw className="mr-2 h-4 w-4" />
             )}
+            Scan Now
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        {devices.length > 0 ? (
-          <Table>
-            <TableHeader>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead 
+                className="cursor-pointer hover:bg-secondary/50"
+                onClick={() => handleSort('ip')}
+              >
+                IP Address {sortColumn === 'ip' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-secondary/50"
+                onClick={() => handleSort('hostname')}
+              >
+                Hostname {sortColumn === 'hostname' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
+              <TableHead 
+                className="hidden md:table-cell cursor-pointer hover:bg-secondary/50"
+                onClick={() => handleSort('mac')}
+              >
+                MAC Address {sortColumn === 'mac' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
+              <TableHead 
+                className="hidden md:table-cell cursor-pointer hover:bg-secondary/50"
+                onClick={() => handleSort('manufacturer')}
+              >
+                Manufacturer {sortColumn === 'manufacturer' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
+              <TableHead className="hidden md:table-cell">Open Ports</TableHead>
+              <TableHead className="text-right">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>Device</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead className="hidden md:table-cell">MAC Address</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <div className="flex flex-col items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                    <p className="text-muted-foreground">Scanning network...</p>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {devices.map((device, index) => {
-                const deviceType = getDeviceType(device);
-                const DeviceIcon = deviceIcons[deviceType];
-                const hasOpenPorts = device.open_ports && device.open_ports.length > 0;
-                const StatusIcon = hasOpenPorts ? AlertTriangle : Shield;
-                const statusClassName = hasOpenPorts ? 'text-amber-500' : 'text-emerald-500';
-                
-                return (
-                  <TableRow key={`${device.ip}-${index}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <DeviceIcon className="h-4 w-4" />
-                        <span>{device.hostname || 'Unknown'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{device.ip}</TableCell>
-                    <TableCell className="hidden md:table-cell">{device.mac}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <StatusIcon className={`h-4 w-4 ${statusClassName}`} />
-                        <span className="hidden md:inline">
-                          {hasOpenPorts ? `${device.open_ports.length} ports open` : 'Secure'}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        ) : isLoading ? (
-          <div className="py-8 flex flex-col items-center justify-center text-muted-foreground">
-            <Loader2 className="h-8 w-8 animate-spin mb-2" />
-            <p>Scanning your network for devices...</p>
-          </div>
-        ) : (
-          <div className="py-8 flex flex-col items-center justify-center text-muted-foreground">
-            <WifiIcon className="h-8 w-8 mb-2 text-muted-foreground/50" />
-            <p>No devices found. Try scanning again.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            ) : sortedDevices.length > 0 ? (
+              sortedDevices.map((device, i) => (
+                <TableRow key={device.ip || i}>
+                  <TableCell>{device.ip}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Wifi className="h-4 w-4 text-primary" />
+                      {device.hostname || 'Unknown'}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{device.mac}</TableCell>
+                  <TableCell className="hidden md:table-cell">{device.manufacturer || 'Unknown'}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {device.open_ports?.length ? (
+                      <Badge variant="outline">{device.open_ports.length}</Badge>
+                    ) : (
+                      <Badge variant="outline">0</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {getSecurityStatus(device)}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <Wifi className="h-10 w-10 mb-2" />
+                    <p>No devices found</p>
+                    {searchTerm && <p className="text-sm">Try adjusting your search</p>}
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 };
 
