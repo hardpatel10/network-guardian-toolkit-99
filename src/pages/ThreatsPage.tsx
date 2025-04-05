@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import {
   Loader2, 
   ChevronDown, 
   ChevronRight,
-  Firewall,
+  Shield,
   Unlock,
   Network,
   Fingerprint,
@@ -24,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiService, NetworkDevice, NetworkScanResult } from '@/services/apiService';
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface ThreatItemProps {
   title: string;
@@ -118,7 +118,6 @@ const ThreatAttackMap: React.FC<{attacks: any[]}> = ({ attacks }) => {
         </svg>
       </div>
       
-      {/* Attack lines */}
       {attacks.map((attack, index) => (
         <div 
           key={index} 
@@ -138,7 +137,6 @@ const ThreatAttackMap: React.FC<{attacks: any[]}> = ({ attacks }) => {
         </div>
       ))}
       
-      {/* Your location */}
       <div className="absolute left-[50%] top-[50%] transform -translate-x-1/2 -translate-y-1/2">
         <div className="relative">
           <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
@@ -177,7 +175,6 @@ const ThreatsPage: React.FC = () => {
       const scanResult = await apiService.getNetworkScan();
       const devices = scanResult.devices || [];
       
-      // Generate threats based on scan results
       const newThreats: {
         title: string;
         description: string;
@@ -187,15 +184,13 @@ const ThreatsPage: React.FC = () => {
       
       let score = 100;
       
-      // Check for devices with open ports
-      const criticalPorts = [22, 23, 25, 445, 3389]; // SSH, Telnet, SMTP, SMB, RDP
+      const criticalPorts = [22, 23, 25, 445, 3389];
       
       devices.forEach((device) => {
         if (device.open_ports && device.open_ports.length > 0) {
           const hasCriticalPort = device.open_ports.some(p => criticalPorts.includes(p.port));
           
           if (hasCriticalPort) {
-            // Critical port found
             score -= 15;
             const criticalPort = device.open_ports.find(p => criticalPorts.includes(p.port));
             newThreats.push({
@@ -205,7 +200,6 @@ const ThreatsPage: React.FC = () => {
               time: 'Now'
             });
           } else if (device.open_ports.length > 5) {
-            // Too many open ports
             score -= 10;
             newThreats.push({
               title: `Excessive Open Ports`,
@@ -214,7 +208,6 @@ const ThreatsPage: React.FC = () => {
               time: 'Now'
             });
           } else {
-            // Non-critical open ports
             score -= 5;
             newThreats.push({
               title: `Open Ports Detected`,
@@ -226,7 +219,6 @@ const ThreatsPage: React.FC = () => {
         }
       });
       
-      // Check for unknown devices
       const unknownDevices = devices.filter(d => d.hostname === 'Unknown' || d.manufacturer === 'Unknown');
       if (unknownDevices.length > 0) {
         score -= 10;
@@ -238,7 +230,6 @@ const ThreatsPage: React.FC = () => {
         });
       }
       
-      // If no threats found
       if (newThreats.length === 0) {
         newThreats.push({
           title: "Network appears secure",
@@ -248,7 +239,6 @@ const ThreatsPage: React.FC = () => {
         });
       }
       
-      // Ensure score stays between 0-100
       setSecurityScore(Math.max(0, Math.min(100, score)));
       setThreats(newThreats);
       
@@ -264,7 +254,6 @@ const ThreatsPage: React.FC = () => {
         variant: "destructive"
       });
       
-      // Set default threats if API fails
       setThreats([{
         title: "Scan Error",
         description: "Could not complete security assessment. Please try again later.",
@@ -281,7 +270,6 @@ const ThreatsPage: React.FC = () => {
     fetchThreats();
   }, []);
 
-  // Simulated attack data for visualization
   const attacks = [
     { sourceX: 20, sourceY: 30, angle: 45, severity: 'high' },
     { sourceX: 70, sourceY: 20, angle: 180, severity: 'medium' },
@@ -338,12 +326,12 @@ const ThreatsPage: React.FC = () => {
                   </div>
                   <Progress 
                     value={securityScore} 
-                    className="h-2 bg-secondary" 
-                    indicatorClassName={
+                    className={cn(
+                      "h-2 bg-secondary",
                       securityScore > 70 ? "bg-security-safe" : 
                       securityScore > 40 ? "bg-security-alert" : 
                       "bg-security-danger"
-                    }
+                    )}
                   />
                 </div>
                 
