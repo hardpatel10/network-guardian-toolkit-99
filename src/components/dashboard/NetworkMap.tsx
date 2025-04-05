@@ -1,19 +1,30 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WifiIcon, Server, Laptop, Smartphone, Tablet, Router, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiService, NetworkDevice } from '@/services/apiService';
-import { useQuery } from '@tanstack/react-query';
 
 const NetworkMap: React.FC = () => {
-  const { data: networkData, isLoading } = useQuery({
-    queryKey: ['networkScan'],
-    queryFn: apiService.getNetworkScan,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  });
+  const [devices, setDevices] = useState<NetworkDevice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getDeviceIcon = useCallback((device: NetworkDevice) => {
+  useEffect(() => {
+    const fetchNetworkData = async () => {
+      try {
+        const result = await apiService.getNetworkScan();
+        setDevices(result.devices || []);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching network data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchNetworkData();
+  }, []);
+
+  // Group devices by type
+  const getDeviceIcon = (device: NetworkDevice) => {
     const hostname = (device.hostname || '').toLowerCase();
     const manufacturer = (device.manufacturer || '').toLowerCase();
     
@@ -28,12 +39,12 @@ const NetworkMap: React.FC = () => {
       return Tablet;
     }
     return Laptop;
-  }, []);
+  };
 
   // Calculate device position on the radar
-  const getDevicePosition = useCallback((index: number, total: number) => {
+  const getDevicePosition = (index: number, total: number) => {
     // Position devices in a circular pattern
-    const radius = total <= 4 ? 40 : 55;
+    const radius = devices.length <= 4 ? 40 : 55;
     const angle = (index / total) * 2 * Math.PI;
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
@@ -43,21 +54,17 @@ const NetworkMap: React.FC = () => {
       left: `calc(50% + ${x}%)`,
       top: `calc(50% + ${y}%)`,
     };
-  }, []);
+  };
 
   // Determine if a device might be suspicious (has open sensitive ports)
-  const isSuspiciousDevice = useCallback((device: NetworkDevice) => {
-    const sensitiveServices = ['ssh', 'telnet', 'rdp', 'smb', 'netbios', 'ftp'];
+  const isSuspiciousDevice = (device: NetworkDevice) => {
+    const sensitiveServices = ['ssh', 'telnet', 'rdp', 'smb', 'netbios'];
     
     // Check if device has open ports with sensitive services
     return device.open_ports?.some(port => 
-      sensitiveServices.some(service => 
-        port.service?.toLowerCase().includes(service)
-      )
+      sensitiveServices.some(service => port.service?.toLowerCase().includes(service))
     ) || false;
-  }, []);
-
-  const devices = networkData?.devices || [];
+  };
 
   return (
     <Card className="security-card col-span-2">
@@ -72,11 +79,6 @@ const NetworkMap: React.FC = () => {
               <Loader2 className="h-10 w-10 animate-spin text-security-DEFAULT mb-2" />
               <p className="text-sm text-muted-foreground">Scanning network...</p>
             </div>
-          ) : devices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center">
-              <WifiIcon className="h-10 w-10 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">No devices found on network</p>
-            </div>
           ) : (
             <>
               {/* Radar animation */}
@@ -90,15 +92,15 @@ const NetworkMap: React.FC = () => {
                   </div>
                   
                   {/* Connected devices - dynamically positioned */}
-                  {devices.slice(0, 12).map((device, index) => {
+                  {devices.map((device, index) => {
                     const DeviceIcon = getDeviceIcon(device);
-                    const position = getDevicePosition(index, Math.min(12, devices.length));
+                    const position = getDevicePosition(index, devices.length);
                     const isSuspicious = isSuspiciousDevice(device);
                     
                     return (
                       <div 
                         key={`${device.ip}-${index}`}
-                        className="absolute animate-pulse-slow"
+                        className={`absolute animate-pulse-slow`}
                         style={{
                           left: position.left,
                           top: position.top,
