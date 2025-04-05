@@ -281,7 +281,7 @@ const ThreatsPage: React.FC = () => {
     { name: "Unauthorized Access", icon: <Unlock className="h-4 w-4" />, count: 12 },
     { name: "Malware Infection", icon: <Terminal className="h-4 w-4" />, count: 8 },
     { name: "Phishing Attempts", icon: <Fingerprint className="h-4 w-4" />, count: 24 },
-    { name: "Brute Force", icon: <Firewall className="h-4 w-4" />, count: 16 },
+    { name: "Brute Force", icon: <Shield className="h-4 w-4" />, count: 16 },
     { name: "Data Exfiltration", icon: <Users className="h-4 w-4" />, count: 3 },
   ];
 
