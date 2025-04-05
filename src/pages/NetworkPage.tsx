@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { apiService, NetworkDevice } from '@/services/apiService';
 import { useToast } from "@/hooks/use-toast";
+import DeviceDetails from '@/components/devices/DeviceDetails';
 import { 
   Network, 
   Wifi, 
@@ -22,9 +23,10 @@ import {
 
 interface DeviceCardProps {
   device: NetworkDevice;
+  onClick: () => void;
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
+const DeviceCard: React.FC<DeviceCardProps> = ({ device, onClick }) => {
   const getDeviceIcon = () => {
     const hostname = device.hostname?.toLowerCase() || '';
     
@@ -40,7 +42,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
   };
   
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onClick}>
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -171,6 +173,8 @@ const NetworkPage: React.FC = () => {
   const [filteredDevices, setFilteredDevices] = useState<NetworkDevice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
+  const [showDeviceDetails, setShowDeviceDetails] = useState(false);
   const { toast } = useToast();
   
   const fetchNetworkDevices = async () => {
@@ -179,6 +183,10 @@ const NetworkPage: React.FC = () => {
       const result = await apiService.getNetworkScan();
       setDevices(result.devices || []);
       setFilteredDevices(result.devices || []);
+      toast({
+        title: "Network scan complete",
+        description: `Found ${result.devices.length} devices on your network`,
+      });
     } catch (error) {
       console.error('Error fetching devices:', error);
       toast({
@@ -208,6 +216,11 @@ const NetworkPage: React.FC = () => {
       ));
     }
   }, [searchTerm, devices]);
+  
+  const handleDeviceClick = (device: NetworkDevice) => {
+    setSelectedDevice(device);
+    setShowDeviceDetails(true);
+  };
   
   return (
     <DashboardLayout>
@@ -260,7 +273,11 @@ const NetworkPage: React.FC = () => {
             ) : filteredDevices.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredDevices.map((device, idx) => (
-                  <DeviceCard key={device.ip || idx} device={device} />
+                  <DeviceCard 
+                    key={device.ip || idx} 
+                    device={device} 
+                    onClick={() => handleDeviceClick(device)}
+                  />
                 ))}
               </div>
             ) : (
@@ -275,6 +292,12 @@ const NetworkPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <DeviceDetails 
+        device={selectedDevice}
+        open={showDeviceDetails}
+        onOpenChange={setShowDeviceDetails}
+      />
     </DashboardLayout>
   );
 };
