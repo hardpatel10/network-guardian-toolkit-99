@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart,
@@ -21,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Upload, AlertTriangle, Shield, Activity, Cpu, FileUp, Clock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { apiService, ScanHistoryItem, NetworkScanResult } from '@/services/apiService';
+import { apiService, NetworkScanResult, SecurityScan } from '@/services/apiService';
 import {
   Table,
   TableBody,
@@ -64,7 +63,7 @@ const StatCard: React.FC<{
 const SecurityAlert: React.FC<{
   title: string;
   message: string;
-  type: 'warning' | 'default' | 'destructive';  // Fixed: Changed 'error' to 'destructive' to match Alert component types
+  type: 'warning' | 'default' | 'destructive';
 }> = ({ title, message, type }) => {
   const alertIcon = type === 'warning' ? <AlertTriangle className="h-4 w-4" /> : 
                    type === 'destructive' ? <AlertTriangle className="h-4 w-4" /> : 
@@ -82,13 +81,13 @@ const SecurityAlert: React.FC<{
 };
 
 const Statistics: React.FC = () => {
-  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
+  const [scanHistory, setScanHistory] = useState<SecurityScan[]>([]);
   const [uploadedData, setUploadedData] = useState<NetworkScanResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [securityAlerts, setSecurityAlerts] = useState<Array<{
     title: string;
     message: string;
-    type: 'warning' | 'default' | 'destructive';  // Fixed: Changed 'error' to 'destructive' to match component usage
+    type: 'warning' | 'default' | 'destructive';
   }>>([]);
   const { toast } = useToast();
 
@@ -115,7 +114,7 @@ const Statistics: React.FC = () => {
   }, []);
 
   // Generate security alerts based on scan history
-  const generateSecurityAlerts = useCallback((history: ScanHistoryItem[]) => {
+  const generateSecurityAlerts = useCallback((history: SecurityScan[]) => {
     if (!history || !history.length) return;
     
     const alerts = [];

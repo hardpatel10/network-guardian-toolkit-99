@@ -1,4 +1,3 @@
-
 // Network Guardian API Service
 
 export interface NetworkDevice {
