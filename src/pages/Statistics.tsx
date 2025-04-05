@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Download, Upload, AlertTriangle, Shield, Activity, Cpu, FileUp, Clock } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { apiService, ScanHistoryItem, NetworkScanResult } from '@/services/apiService';
 import {
@@ -64,14 +64,14 @@ const StatCard: React.FC<{
 const SecurityAlert: React.FC<{
   title: string;
   message: string;
-  type: 'warning' | 'error' | 'info';
+  type: 'warning' | 'default' | 'destructive';  // Fixed: Changed 'error' to 'destructive' to match Alert component types
 }> = ({ title, message, type }) => {
   const alertIcon = type === 'warning' ? <AlertTriangle className="h-4 w-4" /> : 
-                   type === 'error' ? <AlertTriangle className="h-4 w-4" /> : 
+                   type === 'destructive' ? <AlertTriangle className="h-4 w-4" /> : 
                    <Shield className="h-4 w-4" />;
                    
   return (
-    <Alert className="mb-4" variant={type === 'info' ? 'default' : type}>
+    <Alert className="mb-4" variant={type === 'default' ? 'default' : 'destructive'}>
       <div className="flex items-center gap-2">
         {alertIcon}
         <AlertTitle>{title}</AlertTitle>
@@ -88,7 +88,7 @@ const Statistics: React.FC = () => {
   const [securityAlerts, setSecurityAlerts] = useState<Array<{
     title: string;
     message: string;
-    type: 'warning' | 'error' | 'info';
+    type: 'warning' | 'default' | 'destructive';  // Fixed: Changed 'error' to 'destructive' to match component usage
   }>>([]);
   const { toast } = useToast();
 
@@ -126,7 +126,7 @@ const Statistics: React.FC = () => {
       alerts.push({
         title: "High number of open ports detected",
         message: `Your network has ${latestScan.ports} open ports, which may increase attack surface.`,
-        type: "warning"
+        type: "warning" as const
       });
     }
     
@@ -135,7 +135,7 @@ const Statistics: React.FC = () => {
       alerts.push({
         title: "Unexpected growth in connected devices",
         message: `${latestScan.devices - history[1].devices} new devices detected since last scan.`,
-        type: "warning"
+        type: "warning" as const
       });
     }
     
@@ -143,7 +143,7 @@ const Statistics: React.FC = () => {
       alerts.push({
         title: "Network appears secure",
         message: "No significant security issues detected in the latest scan.",
-        type: "info"
+        type: "default" as const
       });
     }
     
