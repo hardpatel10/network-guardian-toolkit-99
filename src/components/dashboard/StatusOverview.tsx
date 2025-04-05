@@ -42,21 +42,22 @@ const StatusOverview: React.FC = () => {
   });
   const [threatsDetected, setThreatsDetected] = useState(0);
   const [unauthorizedDevices, setUnauthorizedDevices] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchNetworkStatus = async () => {
+      setIsLoading(true);
       try {
         // Get latest scan data
         const scanData = await apiService.getNetworkScan();
         
-        // Calculate threats - count devices with open ports
+        // Count devices with open ports (threats)
         const devicesWithOpenPorts = scanData.devices.filter(
           device => device.open_ports && device.open_ports.length > 0
         ).length;
         setThreatsDetected(devicesWithOpenPorts);
         
         // Calculate potentially unauthorized devices
-        // This is a simplification - in a real app, you'd compare against known devices
         const unknownDevices = scanData.devices.filter(
           device => device.hostname === 'Unknown' || device.manufacturer === 'Unknown'
         ).length;
@@ -73,6 +74,8 @@ const StatusOverview: React.FC = () => {
       } catch (error) {
         console.error('Error fetching network status:', error);
         setNetworkStatus({ status: 'neutral', value: 'Unknown' });
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -83,20 +86,20 @@ const StatusOverview: React.FC = () => {
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       <StatusCard
         title="Network Status"
-        value={networkStatus.value}
-        status={networkStatus.status}
+        value={isLoading ? "Loading..." : networkStatus.value}
+        status={isLoading ? 'neutral' : networkStatus.status}
         icon={Shield}
       />
       <StatusCard
         title="Threats Detected"
-        value={threatsDetected}
-        status={threatsDetected > 0 ? 'warning' : 'secure'}
+        value={isLoading ? "-" : threatsDetected}
+        status={isLoading ? 'neutral' : threatsDetected > 0 ? 'warning' : 'secure'}
         icon={AlertTriangle}
       />
       <StatusCard
         title="Unauthorized Devices"
-        value={unauthorizedDevices}
-        status={unauthorizedDevices > 0 ? 'danger' : 'secure'}
+        value={isLoading ? "-" : unauthorizedDevices}
+        status={isLoading ? 'neutral' : unauthorizedDevices > 0 ? 'danger' : 'secure'}
         icon={WifiOff}
       />
     </div>

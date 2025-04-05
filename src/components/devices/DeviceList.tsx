@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiService, NetworkDevice } from '@/services/apiService';
+import DeviceDetailsPopup from './DeviceDetailsPopup';
 import { 
   Search, 
   RefreshCw, 
@@ -30,6 +31,8 @@ const DeviceList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof NetworkDevice>('ip');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
+  const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchDevices = async () => {
@@ -142,6 +145,11 @@ const DeviceList: React.FC = () => {
     </Badge>;
   };
 
+  const handleDeviceClick = (device: NetworkDevice) => {
+    setSelectedDevice(device);
+    setIsDetailPopupOpen(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -223,7 +231,11 @@ const DeviceList: React.FC = () => {
               </TableRow>
             ) : sortedDevices.length > 0 ? (
               sortedDevices.map((device, i) => (
-                <TableRow key={device.ip || i}>
+                <TableRow 
+                  key={device.ip || i} 
+                  className="cursor-pointer hover:bg-secondary/40"
+                  onClick={() => handleDeviceClick(device)}
+                >
                   <TableCell>{device.ip}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -259,6 +271,12 @@ const DeviceList: React.FC = () => {
           </TableBody>
         </Table>
       </div>
+
+      <DeviceDetailsPopup 
+        device={selectedDevice} 
+        isOpen={isDetailPopupOpen} 
+        onClose={() => setIsDetailPopupOpen(false)}
+      />
     </div>
   );
 };
