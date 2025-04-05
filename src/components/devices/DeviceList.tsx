@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -33,18 +32,24 @@ const DeviceList: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
   const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
+  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchDevices = async () => {
+  const fetchDevices = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const result = await apiService.getNetworkScan();
+      const result = forceRefresh 
+        ? await apiService.refreshNetworkScan() 
+        : await apiService.getNetworkScan();
+      
       if (result.devices) {
         setDevices(result.devices);
         setFilteredDevices(result.devices);
+        setLastScanTimestamp(result.timestamp || new Date().toISOString());
       }
+      
       toast({
-        title: "Scan complete",
+        title: forceRefresh ? "Scan complete" : "Loaded network devices",
         description: `Found ${result.devices?.length || 0} devices on your network`
       });
     } catch (error) {
@@ -98,10 +103,8 @@ const DeviceList: React.FC = () => {
 
   const handleSort = (column: keyof NetworkDevice) => {
     if (sortColumn === column) {
-      // Toggle sort direction if same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new column and default to ascending
       setSortColumn(column);
       setSortDirection('asc');
     }
@@ -117,7 +120,6 @@ const DeviceList: React.FC = () => {
         : bValue.localeCompare(aValue);
     }
     
-    // Fallback for non-string values
     return sortDirection === 'asc'
       ? String(aValue).localeCompare(String(bValue))
       : String(bValue).localeCompare(String(aValue));
@@ -150,6 +152,17 @@ const DeviceList: React.FC = () => {
     setIsDetailPopupOpen(true);
   };
 
+  const formatTimestamp = (timestamp: string | null) => {
+    if (!timestamp) return 'Unknown';
+    
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return 'Unknown';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -162,7 +175,10 @@ const DeviceList: React.FC = () => {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col xs:flex-row gap-2">
+          <div className="text-xs text-muted-foreground self-center whitespace-nowrap">
+            Last scan: {formatTimestamp(lastScanTimestamp)}
+          </div>
           <Button 
             variant="outline" 
             onClick={exportDeviceData}
@@ -173,7 +189,7 @@ const DeviceList: React.FC = () => {
             Export JSON
           </Button>
           <Button 
-            onClick={fetchDevices}
+            onClick={() => fetchDevices(true)}
             disabled={isLoading}
             className="whitespace-nowrap"
           >

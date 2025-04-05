@@ -21,7 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { apiService, NetworkDevice, NetworkScanResult } from '@/services/apiService';
+import { apiService, NetworkDevice } from '@/services/apiService';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -159,6 +159,7 @@ const ThreatsPage: React.FC = () => {
   }[]>([]);
   const [expandedThreats, setExpandedThreats] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
 
   const toggleThreat = (index: number) => {
@@ -169,11 +170,15 @@ const ThreatsPage: React.FC = () => {
     }
   };
 
-  const fetchThreats = async () => {
+  const fetchThreats = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const scanResult = await apiService.getNetworkScan();
+      const scanResult = forceRefresh 
+        ? await apiService.refreshNetworkScan() 
+        : await apiService.getNetworkScan();
+      
       const devices = scanResult.devices || [];
+      setLastScanTimestamp(scanResult.timestamp || new Date().toISOString());
       
       const newThreats: {
         title: string;
@@ -243,7 +248,7 @@ const ThreatsPage: React.FC = () => {
       setThreats(newThreats);
       
       toast({
-        title: "Threat scan complete",
+        title: forceRefresh ? "Threat scan complete" : "Threat data loaded",
         description: `Found ${newThreats.length} potential security issues`,
       });
     } catch (error) {
@@ -270,6 +275,17 @@ const ThreatsPage: React.FC = () => {
     fetchThreats();
   }, []);
 
+  const formatTimestamp = (timestamp: string | null) => {
+    if (!timestamp) return 'Unknown';
+    
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return 'Unknown';
+    }
+  };
+
   const attacks = [
     { sourceX: 20, sourceY: 30, angle: 45, severity: 'high' },
     { sourceX: 70, sourceY: 20, angle: 180, severity: 'medium' },
@@ -295,14 +311,19 @@ const ThreatsPage: React.FC = () => {
               Monitor and address potential security threats
             </p>
           </div>
-          <Button
-            onClick={fetchThreats}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Scan for Threats
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-muted-foreground whitespace-nowrap">
+              Last scan: {formatTimestamp(lastScanTimestamp)}
+            </div>
+            <Button
+              onClick={() => fetchThreats(true)}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Scan for Threats
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="current">

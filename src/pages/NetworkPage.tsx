@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,7 +85,6 @@ const NetworkTopology: React.FC<{devices: NetworkDevice[]}> = ({ devices }) => {
               <Router className="w-10 h-10 text-primary-foreground" />
             </div>
 
-            {/* Lines connecting router to devices */}
             {devices.slice(0, 8).map((device, index) => {
               const angle = (Math.PI * 2 / Math.min(8, devices.length)) * index;
               const x = Math.cos(angle) * 120;
@@ -175,16 +173,22 @@ const NetworkPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
   const [showDeviceDetails, setShowDeviceDetails] = useState(false);
+  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const fetchNetworkDevices = async () => {
+  const fetchNetworkDevices = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const result = await apiService.getNetworkScan();
+      const result = forceRefresh 
+        ? await apiService.refreshNetworkScan() 
+        : await apiService.getNetworkScan();
+      
       setDevices(result.devices || []);
       setFilteredDevices(result.devices || []);
+      setLastScanTimestamp(result.timestamp || new Date().toISOString());
+      
       toast({
-        title: "Network scan complete",
+        title: forceRefresh ? "Network scan complete" : "Network devices loaded",
         description: `Found ${result.devices.length} devices on your network`,
       });
     } catch (error) {
@@ -222,6 +226,17 @@ const NetworkPage: React.FC = () => {
     setShowDeviceDetails(true);
   };
   
+  const formatTimestamp = (timestamp: string | null) => {
+    if (!timestamp) return 'Unknown';
+    
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return 'Unknown';
+    }
+  };
+  
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -242,8 +257,11 @@ const NetworkPage: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <div className="text-xs text-muted-foreground whitespace-nowrap">
+            Last scan: {formatTimestamp(lastScanTimestamp)}
+          </div>
           <Button 
-            onClick={fetchNetworkDevices}
+            onClick={() => fetchNetworkDevices(true)}
             disabled={isLoading}
           >
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
