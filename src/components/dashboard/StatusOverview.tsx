@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, WifiOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiService } from '@/services/apiService';
+import { useQuery } from '@tanstack/react-query';
 
 interface StatusCardProps {
   title: string;
@@ -36,48 +37,80 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, value, status, icon: Ico
 };
 
 const StatusOverview: React.FC = () => {
+  const { data: networkScanData, isLoading } = useQuery({
+    queryKey: ['networkScan'],
+    queryFn: apiService.getNetworkScan,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+  
   const [networkStatus, setNetworkStatus] = useState<{ status: 'secure' | 'warning' | 'danger' | 'neutral', value: string }>({ 
     status: 'neutral', 
-    value: 'Unknown' 
+    value: 'Loading...' 
   });
   const [threatsDetected, setThreatsDetected] = useState(0);
   const [unauthorizedDevices, setUnauthorizedDevices] = useState(0);
   
   useEffect(() => {
-    const fetchNetworkStatus = async () => {
-      try {
-        // Get latest scan data
-        const scanData = await apiService.getNetworkScan();
-        
-        // Calculate threats - count devices with open ports
-        const devicesWithOpenPorts = scanData.devices.filter(
-          device => device.open_ports && device.open_ports.length > 0
-        ).length;
-        setThreatsDetected(devicesWithOpenPorts);
-        
-        // Calculate potentially unauthorized devices
-        // This is a simplification - in a real app, you'd compare against known devices
-        const unknownDevices = scanData.devices.filter(
-          device => device.hostname === 'Unknown' || device.manufacturer === 'Unknown'
-        ).length;
-        setUnauthorizedDevices(unknownDevices);
-        
-        // Set overall network status based on threats
-        if (devicesWithOpenPorts === 0 && unknownDevices === 0) {
-          setNetworkStatus({ status: 'secure', value: 'Secure' });
-        } else if (devicesWithOpenPorts > 0 && unknownDevices === 0) {
-          setNetworkStatus({ status: 'warning', value: 'Warning' });
-        } else if (unknownDevices > 0) {
-          setNetworkStatus({ status: 'danger', value: 'Critical' });
-        }
-      } catch (error) {
-        console.error('Error fetching network status:', error);
+    if (!networkScanData || isLoading) return;
+    
+    try {
+      const devices = networkScanData.devices || [];
+      
+      // Calculate threats - count devices with open sensitive ports
+      const sensitiveServices = ['ssh', 'telnet', 'rdp', 'smb', 'netbios', 'ftp'];
+      const devicesWithSensitivePorts = devices.filter(device => 
+        device.open_ports && device.open_ports.some(port => 
+          sensitiveServices.some(service => 
+            port.service?.toLowerCase().includes(service)
+          )
+        )
+      ).length;
+      
+      setThreatsDetected(devicesWithSensitivePorts);
+      
+      // Calculate potentially unauthorized devices
+      const unknownDevices = devices.filter(device => 
+        !device.hostname || device.hostname === 'Unknown' || 
+        !device.manufacturer || device.manufacturer === 'Unknown'
+      ).length;
+      
+      setUnauthorizedDevices(unknownDevices);
+      
+      // Set overall network status based on threats
+      if (devicesWithSensitivePorts === 0 && unknownDevices === 0) {
+        setNetworkStatus({ status: 'secure', value: 'Secure' });
+      } else if (devicesWithSensitivePorts > 0 && unknownDevices === 0) {
+        setNetworkStatus({ status: 'warning', value: 'Warning' });
+      } else if (unknownDevices > 0) {
+        setNetworkStatus({ status: 'danger', value: 'Critical' });
+      } else {
         setNetworkStatus({ status: 'neutral', value: 'Unknown' });
       }
-    };
-    
-    fetchNetworkStatus();
-  }, []);
+    } catch (error) {
+      console.error('Error processing network status:', error);
+      setNetworkStatus({ status: 'neutral', value: 'Unknown' });
+    }
+  }, [networkScanData, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map(i => (
+          <Card key={i} className="security-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="h-4 w-24 bg-secondary rounded-md animate-pulse"></div>
+              <div className="h-5 w-5 bg-secondary rounded-full animate-pulse"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-secondary rounded-md w-16 animate-pulse"></div>
+              <div className="mt-2 h-6 bg-secondary/50 rounded-md w-24 animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
