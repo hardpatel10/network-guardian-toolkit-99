@@ -38,23 +38,9 @@ const SecurityPage: React.FC = () => {
   const runSecurityScan = async () => {
     setIsLoading(true);
     try {
-      // Try to run the security scan through the backend API
-      let scanResult;
-      try {
-        // This will call the backend's runSecurityScan endpoint
-        scanResult = await apiService.runSecurityScan();
-        toast({
-          title: "Security scan initiated",
-          description: "Backend is processing the security scan",
-        });
-      } catch (error) {
-        console.log("Could not run security scan via API, falling back to regular network scan");
-        // Fall back to normal network scan if the dedicated endpoint fails
-        scanResult = await apiService.getNetworkScan();
-      }
-      
-      setDevices(scanResult.devices || []);
-      processSecurityData(scanResult.devices || []);
+      const result = await apiService.getNetworkScan();
+      setDevices(result.devices || []);
+      processSecurityData(result.devices || []);
       setLastScan(new Date().toLocaleString());
       toast({
         title: "Security scan complete",

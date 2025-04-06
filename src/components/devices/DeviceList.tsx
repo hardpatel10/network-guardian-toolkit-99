@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -12,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiService, NetworkDevice } from '@/services/apiService';
-import DeviceDetailsPopup from './DeviceDetailsPopup';
 import { 
   Search, 
   RefreshCw, 
@@ -30,26 +30,18 @@ const DeviceList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof NetworkDevice>('ip');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
-  const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
-  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchDevices = async (forceRefresh = false) => {
+  const fetchDevices = async () => {
     setIsLoading(true);
     try {
-      const result = forceRefresh 
-        ? await apiService.refreshNetworkScan() 
-        : await apiService.getNetworkScan();
-      
+      const result = await apiService.getNetworkScan();
       if (result.devices) {
         setDevices(result.devices);
         setFilteredDevices(result.devices);
-        setLastScanTimestamp(result.timestamp || new Date().toISOString());
       }
-      
       toast({
-        title: forceRefresh ? "Scan complete" : "Loaded network devices",
+        title: "Scan complete",
         description: `Found ${result.devices?.length || 0} devices on your network`
       });
     } catch (error) {
@@ -103,8 +95,10 @@ const DeviceList: React.FC = () => {
 
   const handleSort = (column: keyof NetworkDevice) => {
     if (sortColumn === column) {
+      // Toggle sort direction if same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
+      // Set new column and default to ascending
       setSortColumn(column);
       setSortDirection('asc');
     }
@@ -120,6 +114,7 @@ const DeviceList: React.FC = () => {
         : bValue.localeCompare(aValue);
     }
     
+    // Fallback for non-string values
     return sortDirection === 'asc'
       ? String(aValue).localeCompare(String(bValue))
       : String(bValue).localeCompare(String(aValue));
@@ -147,22 +142,6 @@ const DeviceList: React.FC = () => {
     </Badge>;
   };
 
-  const handleDeviceClick = (device: NetworkDevice) => {
-    setSelectedDevice(device);
-    setIsDetailPopupOpen(true);
-  };
-
-  const formatTimestamp = (timestamp: string | null) => {
-    if (!timestamp) return 'Unknown';
-    
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return 'Unknown';
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -175,10 +154,7 @@ const DeviceList: React.FC = () => {
             className="pl-9"
           />
         </div>
-        <div className="flex flex-col xs:flex-row gap-2">
-          <div className="text-xs text-muted-foreground self-center whitespace-nowrap">
-            Last scan: {formatTimestamp(lastScanTimestamp)}
-          </div>
+        <div className="flex gap-2">
           <Button 
             variant="outline" 
             onClick={exportDeviceData}
@@ -189,7 +165,7 @@ const DeviceList: React.FC = () => {
             Export JSON
           </Button>
           <Button 
-            onClick={() => fetchDevices(true)}
+            onClick={fetchDevices}
             disabled={isLoading}
             className="whitespace-nowrap"
           >
@@ -247,11 +223,7 @@ const DeviceList: React.FC = () => {
               </TableRow>
             ) : sortedDevices.length > 0 ? (
               sortedDevices.map((device, i) => (
-                <TableRow 
-                  key={device.ip || i} 
-                  className="cursor-pointer hover:bg-secondary/40"
-                  onClick={() => handleDeviceClick(device)}
-                >
+                <TableRow key={device.ip || i}>
                   <TableCell>{device.ip}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -287,12 +259,6 @@ const DeviceList: React.FC = () => {
           </TableBody>
         </Table>
       </div>
-
-      <DeviceDetailsPopup 
-        device={selectedDevice} 
-        isOpen={isDetailPopupOpen} 
-        onClose={() => setIsDetailPopupOpen(false)}
-      />
     </div>
   );
 };

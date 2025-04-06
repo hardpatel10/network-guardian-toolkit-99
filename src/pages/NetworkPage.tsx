@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { apiService, NetworkDevice } from '@/services/apiService';
 import { useToast } from "@/hooks/use-toast";
-import DeviceDetails from '@/components/devices/DeviceDetails';
 import { 
   Network, 
   Wifi, 
@@ -22,10 +22,9 @@ import {
 
 interface DeviceCardProps {
   device: NetworkDevice;
-  onClick: () => void;
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, onClick }) => {
+const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
   const getDeviceIcon = () => {
     const hostname = device.hostname?.toLowerCase() || '';
     
@@ -41,7 +40,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onClick }) => {
   };
   
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onClick}>
+    <Card className="hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -85,6 +84,7 @@ const NetworkTopology: React.FC<{devices: NetworkDevice[]}> = ({ devices }) => {
               <Router className="w-10 h-10 text-primary-foreground" />
             </div>
 
+            {/* Lines connecting router to devices */}
             {devices.slice(0, 8).map((device, index) => {
               const angle = (Math.PI * 2 / Math.min(8, devices.length)) * index;
               const x = Math.cos(angle) * 120;
@@ -171,26 +171,14 @@ const NetworkPage: React.FC = () => {
   const [filteredDevices, setFilteredDevices] = useState<NetworkDevice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
-  const [showDeviceDetails, setShowDeviceDetails] = useState(false);
-  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const fetchNetworkDevices = async (forceRefresh = false) => {
+  const fetchNetworkDevices = async () => {
     setIsLoading(true);
     try {
-      const result = forceRefresh 
-        ? await apiService.refreshNetworkScan() 
-        : await apiService.getNetworkScan();
-      
+      const result = await apiService.getNetworkScan();
       setDevices(result.devices || []);
       setFilteredDevices(result.devices || []);
-      setLastScanTimestamp(result.timestamp || new Date().toISOString());
-      
-      toast({
-        title: forceRefresh ? "Network scan complete" : "Network devices loaded",
-        description: `Found ${result.devices.length} devices on your network`,
-      });
     } catch (error) {
       console.error('Error fetching devices:', error);
       toast({
@@ -221,22 +209,6 @@ const NetworkPage: React.FC = () => {
     }
   }, [searchTerm, devices]);
   
-  const handleDeviceClick = (device: NetworkDevice) => {
-    setSelectedDevice(device);
-    setShowDeviceDetails(true);
-  };
-  
-  const formatTimestamp = (timestamp: string | null) => {
-    if (!timestamp) return 'Unknown';
-    
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return 'Unknown';
-    }
-  };
-  
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -257,11 +229,8 @@ const NetworkPage: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="text-xs text-muted-foreground whitespace-nowrap">
-            Last scan: {formatTimestamp(lastScanTimestamp)}
-          </div>
           <Button 
-            onClick={() => fetchNetworkDevices(true)}
+            onClick={fetchNetworkDevices}
             disabled={isLoading}
           >
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
@@ -291,11 +260,7 @@ const NetworkPage: React.FC = () => {
             ) : filteredDevices.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredDevices.map((device, idx) => (
-                  <DeviceCard 
-                    key={device.ip || idx} 
-                    device={device} 
-                    onClick={() => handleDeviceClick(device)}
-                  />
+                  <DeviceCard key={device.ip || idx} device={device} />
                 ))}
               </div>
             ) : (
@@ -310,12 +275,6 @@ const NetworkPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-      
-      <DeviceDetails 
-        device={selectedDevice}
-        open={showDeviceDetails}
-        onOpenChange={setShowDeviceDetails}
-      />
     </DashboardLayout>
   );
 };

@@ -1,3 +1,4 @@
+
 import time
 import nmap
 import socket
@@ -15,7 +16,6 @@ import os
 import json
 import csv
 import io
-import random
 
 # Apply nest_asyncio to fix event loop issues
 nest_asyncio.apply()
@@ -423,130 +423,6 @@ def get_scan_history():
             'devices': row[1],
             'ports': row[2]
         } for row in cursor.fetchall()])
-
-# New endpoint for network traffic data
-@app.route('/network-traffic')
-def get_network_traffic():
-    try:
-        # Generate sample traffic data - in a real implementation, you would get this from the system
-        hours = list(range(24))
-        download = [random.randint(20, 100) for _ in range(24)]
-        upload = [random.randint(5, 45) for _ in range(24)]
-        
-        return jsonify({
-            'hours': hours,
-            'download': download,
-            'upload': upload
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# New endpoint for device usage data
-@app.route('/device-usage')
-def get_device_usage():
-    try:
-        # Get the latest devices
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        local_ip = get_local_ip()
-        if not local_ip:
-            return jsonify({"error": "Could not determine local IP"}), 500
-            
-        devices = loop.run_until_complete(
-            scan_connected_devices(get_network_range(local_ip))
-        )
-        
-        # Generate usage stats for each device
-        usage_data = []
-        for device in devices:
-            device_type = 'smartphone'
-            hostname = device.get('hostname', '').lower()
-            
-            if 'tv' in hostname:
-                device_type = 'monitor'
-            elif 'router' in hostname or 'gateway' in hostname:
-                device_type = 'router'
-            elif 'printer' in hostname:
-                device_type = 'printer'
-            elif 'apple' in device.get('manufacturer', '').lower() or 'laptop' in hostname:
-                device_type = 'laptop'
-                
-            usage_data.append({
-                'deviceName': device.get('hostname') or f"Device ({device.get('ip')})",
-                'deviceType': device_type,
-                'downloadMB': random.randint(100, 2100),
-                'uploadMB': random.randint(50, 650),
-                'activeTime': f"{random.randint(0, 12)}h {random.randint(0, 60)}m"
-            })
-            
-        return jsonify(usage_data)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        loop.close()
-
-# New endpoint for network speed data
-@app.route('/network-speed')
-def get_network_speed():
-    try:
-        # In a real implementation, you would get this from speedtest or system metrics
-        return jsonify({
-            'download': random.randint(60, 110),  # Mbps
-            'upload': random.randint(15, 35),     # Mbps
-            'ping': random.randint(5, 25)         # ms
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# New endpoint to trigger a security scan
-@app.route('/run-security-scan', methods=['POST'])
-def run_security_scan():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        local_ip = get_local_ip()
-        if not local_ip:
-            return jsonify({"error": "Could not determine local IP"}), 500
-
-        devices = loop.run_until_complete(
-            scan_connected_devices(get_network_range(local_ip))
-        )
-        
-        # Calculate security metrics
-        total_ports = sum(len(d.get('open_ports', [])) for d in devices)
-        critical_ports = sum(1 for d in devices for p in d.get('open_ports', []) 
-                           if p.get('port') in [22, 23, 25, 445, 3389])
-        unknown_devices = sum(1 for d in devices if d.get('hostname') == 'Unknown')
-        
-        # Record the scan
-        with sqlite3.connect('network_devices.db') as conn:
-            conn.execute('''INSERT INTO scans 
-                         (timestamp, devices_count, open_ports_count)
-                         VALUES (?, ?, ?)''',
-                      (datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                      len(devices),
-                      total_ports))
-        
-        return jsonify({
-            "current_ip": local_ip,
-            "network_range": get_network_range(local_ip),
-            "devices": devices if devices else [],
-            "security_metrics": {
-                "total_ports": total_ports,
-                "critical_ports": critical_ports,
-                "unknown_devices": unknown_devices,
-                "scan_time": datetime.now().isoformat()
-            }
-        })
-        
-    except Exception as e:
-        return jsonify({
-            "error": str(e),
-            "devices": []
-        }), 500
-    finally:
-        loop.close()
 
 @app.route('/upload-scan-data', methods=['POST'])
 def upload_scan_data():

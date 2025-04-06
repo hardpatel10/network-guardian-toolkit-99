@@ -56,22 +56,61 @@ const ThreatItem: React.FC<ThreatItemProps> = ({
 const ThreatsPanel: React.FC = () => {
   const [securityScore, setSecurityScore] = useState(100);
   const [threats, setThreats] = useState<ThreatItemProps[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchThreats = async () => {
-      setIsLoading(true);
       try {
         const scanResult = await apiService.getNetworkScan();
         const devices = scanResult.devices || [];
         
-        // Calculate security score
-        const score = apiService.calculateSecurityScore(devices);
-        setSecurityScore(score);
+        // Generate threats based on scan results
+        const newThreats: ThreatItemProps[] = [];
+        let score = 100;
         
-        // Get threats based on devices
-        const detectedThreats = apiService.getSecurityThreats(devices);
-        setThreats(detectedThreats);
+        // Check for devices with open ports
+        devices.forEach((device) => {
+          if (device.open_ports && device.open_ports.length > 0) {
+            const criticalPorts = [22, 23, 25, 445, 3389]; // SSH, Telnet, SMTP, SMB, RDP
+            const hasCriticalPort = device.open_ports.some(p => criticalPorts.includes(p.port));
+            
+            if (hasCriticalPort) {
+              // Critical port found
+              score -= 15;
+              const criticalPort = device.open_ports.find(p => criticalPorts.includes(p.port));
+              newThreats.push({
+                title: `Critical Port Detected`,
+                description: `Port ${criticalPort?.port} (${criticalPort?.service}) is open on ${device.hostname || device.ip}`,
+                severity: 'high',
+                time: 'Now'
+              });
+            } else {
+              // Non-critical open ports
+              score -= 5;
+              newThreats.push({
+                title: `Open Ports Detected`,
+                description: `${device.open_ports.length} open ports on ${device.hostname || device.ip}`,
+                severity: 'medium',
+                time: 'Now'
+              });
+            }
+          }
+        });
+        
+        // Check for unknown devices
+        const unknownDevices = devices.filter(d => d.hostname === 'Unknown' || d.manufacturer === 'Unknown');
+        if (unknownDevices.length > 0) {
+          score -= 10;
+          newThreats.push({
+            title: "Unknown Devices Detected",
+            description: `${unknownDevices.length} devices with unidentified hostname or manufacturer`,
+            severity: 'medium',
+            time: 'Now'
+          });
+        }
+        
+        // Ensure score stays between 0-100
+        setSecurityScore(Math.max(0, Math.min(100, score)));
+        setThreats(newThreats);
         
       } catch (error) {
         console.error("Error fetching threats:", error);
@@ -83,8 +122,6 @@ const ThreatsPanel: React.FC = () => {
           time: 'Now'
         }]);
         setSecurityScore(50);
-      } finally {
-        setIsLoading(false);
       }
     };
     
@@ -107,12 +144,7 @@ const ThreatsPanel: React.FC = () => {
         </div>
         
         <div className="mt-4">
-          {isLoading ? (
-            <div className="animate-pulse space-y-3">
-              <div className="h-16 bg-secondary/30 rounded-md"></div>
-              <div className="h-16 bg-secondary/30 rounded-md"></div>
-            </div>
-          ) : threats.length > 0 ? (
+          {threats.length > 0 ? (
             threats.map((threat, index) => (
               <ThreatItem 
                 key={index}
