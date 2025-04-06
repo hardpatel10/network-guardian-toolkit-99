@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   Settings,
   Bell,
@@ -19,8 +20,12 @@ import {
   MonitorCheck,
   Database
 } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const SettingsPage: React.FC = () => {
+  // Get the theme context
+  const { theme, toggleTheme } = useTheme();
+  
   const [scanning, setScanning] = useState({
     autoScan: true,
     scanInterval: '12',
@@ -45,20 +50,79 @@ const SettingsPage: React.FC = () => {
   });
   
   const [display, setDisplay] = useState({
-    darkMode: false,
+    darkMode: theme === 'dark',
     compactView: false,
     showIPs: true,
     showMACs: true,
     showHostnames: true
   });
+
+  // Load settings from localStorage when component mounts
+  useEffect(() => {
+    const loadSettings = () => {
+      const savedScanning = localStorage.getItem('scanningSettings');
+      const savedNotifications = localStorage.getItem('notificationSettings');
+      const savedSecurity = localStorage.getItem('securitySettings');
+      const savedDisplay = localStorage.getItem('displaySettings');
+      
+      if (savedScanning) setScanning(JSON.parse(savedScanning));
+      if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
+      if (savedSecurity) setSecurity(JSON.parse(savedSecurity));
+      if (savedDisplay) {
+        const parsedDisplay = JSON.parse(savedDisplay);
+        // Sync dark mode with theme context
+        setDisplay({...parsedDisplay, darkMode: theme === 'dark'});
+      }
+    };
+    
+    loadSettings();
+  }, [theme]);
+  
+  // Effect to update dark mode when theme changes externally
+  useEffect(() => {
+    setDisplay(prev => ({...prev, darkMode: theme === 'dark'}));
+  }, [theme]);
   
   const { toast } = useToast();
   
+  // History retention state
+  const [retentionPeriod, setRetentionPeriod] = useState('1month');
+  
   const handleSave = () => {
+    // Save all settings to localStorage
+    localStorage.setItem('scanningSettings', JSON.stringify(scanning));
+    localStorage.setItem('notificationSettings', JSON.stringify(notifications));
+    localStorage.setItem('securitySettings', JSON.stringify(security));
+    localStorage.setItem('displaySettings', JSON.stringify(display));
+    localStorage.setItem('retentionPeriod', retentionPeriod);
+    
     toast({
       title: "Settings saved",
       description: "Your preferences have been updated",
     });
+  };
+
+  // Function to reset display settings
+  const resetDisplaySettings = () => {
+    const defaultDisplay = {
+      darkMode: false,
+      compactView: false,
+      showIPs: true,
+      showMACs: true,
+      showHostnames: true
+    };
+    setDisplay(defaultDisplay);
+    if (defaultDisplay.darkMode !== (theme === 'dark')) {
+      toggleTheme();
+    }
+  };
+
+  // Function to handle dark mode toggle
+  const handleDarkModeToggle = (checked: boolean) => {
+    setDisplay({...display, darkMode: checked});
+    if (checked !== (theme === 'dark')) {
+      toggleTheme();
+    }
   };
   
   return (
@@ -199,16 +263,33 @@ const SettingsPage: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>History Retention Period</Label>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1">1 Week</Button>
-                    <Button variant="secondary" className="flex-1">1 Month</Button>
-                    <Button variant="outline" className="flex-1">3 Months</Button>
-                    <Button variant="outline" className="flex-1">Forever</Button>
-                  </div>
+                  <ToggleGroup 
+                    type="single" 
+                    value={retentionPeriod}
+                    onValueChange={(value) => {
+                      if (value) setRetentionPeriod(value);
+                    }}
+                    className="flex justify-between"
+                  >
+                    <ToggleGroupItem value="1week" className="flex-1">1 Week</ToggleGroupItem>
+                    <ToggleGroupItem value="1month" className="flex-1">1 Month</ToggleGroupItem>
+                    <ToggleGroupItem value="3months" className="flex-1">3 Months</ToggleGroupItem>
+                    <ToggleGroupItem value="forever" className="flex-1">Forever</ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
                 
                 <div className="pt-2">
-                  <Button variant="destructive">
+                  <Button 
+                    variant="destructive"
+                    onClick={() => {
+                      // Clear scan history
+                      localStorage.removeItem('scanHistory');
+                      toast({
+                        title: "Scan history cleared",
+                        description: "All scan history has been removed",
+                      });
+                    }}
+                  >
                     Clear Scan History
                   </Button>
                 </div>
@@ -383,15 +464,92 @@ const SettingsPage: React.FC = () => {
                 <CardDescription>Manage your stored data and backups</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full"
+                  onClick={() => {
+                    // Export data functionality
+                    const allData = {
+                      scanning,
+                      notifications,
+                      security,
+                      display,
+                      retentionPeriod,
+                      scanHistory: localStorage.getItem('scanHistory')
+                    };
+                    
+                    const dataStr = JSON.stringify(allData);
+                    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+                    const exportFileName = `network-guardian-data-${new Date().toISOString()}.json`;
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileName);
+                    linkElement.click();
+                    
+                    toast({
+                      title: "Data exported",
+                      description: "Your data has been exported successfully",
+                    });
+                  }}
+                >
                   <Database className="mr-2 h-4 w-4" />
                   Export All Data
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full"
+                  onClick={() => {
+                    // This would normally open a file input dialog
+                    toast({
+                      title: "Import data",
+                      description: "Please select a data file to import",
+                    });
+                  }}
+                >
                   <Database className="mr-2 h-4 w-4" />
                   Import Data
                 </Button>
-                <Button variant="destructive" className="w-full">
+                <Button variant="destructive" className="w-full"
+                  onClick={() => {
+                    // Delete all data
+                    localStorage.clear();
+                    toast({
+                      title: "Data deleted",
+                      description: "All data has been removed from this device",
+                    });
+                    
+                    // Reset all states to default
+                    setScanning({
+                      autoScan: true,
+                      scanInterval: '12',
+                      deepScan: false,
+                      scanPorts: true,
+                      osDetection: true
+                    });
+                    
+                    setNotifications({
+                      enableNotifications: true,
+                      newDeviceAlerts: true,
+                      securityThreats: true,
+                      statusUpdates: false,
+                      scanCompletion: true
+                    });
+                    
+                    setSecurity({
+                      autoBlock: false,
+                      threatAnalysis: true,
+                      saveHistory: true,
+                      anonymousData: false
+                    });
+                    
+                    setDisplay({
+                      darkMode: theme === 'dark',
+                      compactView: false,
+                      showIPs: true,
+                      showMACs: true,
+                      showHostnames: true
+                    });
+                    
+                    setRetentionPeriod('1month');
+                  }}
+                >
                   Delete All Data
                 </Button>
               </CardContent>
@@ -415,7 +573,7 @@ const SettingsPage: React.FC = () => {
                   <Switch 
                     id="darkMode" 
                     checked={display.darkMode}
-                    onCheckedChange={(checked) => setDisplay({...display, darkMode: checked})}
+                    onCheckedChange={handleDarkModeToggle}
                   />
                 </div>
                 
@@ -475,7 +633,13 @@ const SettingsPage: React.FC = () => {
                   />
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end">
+              <CardFooter className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={resetDisplaySettings}
+                >
+                  Reset
+                </Button>
                 <Button onClick={handleSave}>
                   <Save className="mr-2 h-4 w-4" />
                   Save Changes
@@ -491,11 +655,35 @@ const SettingsPage: React.FC = () => {
             <p className="text-sm text-muted-foreground">Version 1.0.0</p>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                toast({
+                  title: "Checking for updates",
+                  description: "Looking for the latest version..."
+                });
+                
+                // Simulate check
+                setTimeout(() => {
+                  toast({
+                    title: "No updates available",
+                    description: "You're running the latest version (1.0.0)"
+                  });
+                }, 2000);
+              }}
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Check for Updates
             </Button>
-            <Button variant="secondary">
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                toast({
+                  title: "Advanced Settings",
+                  description: "This feature is coming soon"
+                });
+              }}
+            >
               <Settings className="mr-2 h-4 w-4" />
               Advanced Settings
             </Button>
