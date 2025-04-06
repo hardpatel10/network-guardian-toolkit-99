@@ -34,18 +34,63 @@ const Sidebar: React.FC = () => {
   return (
     <aside className="hidden md:flex flex-col w-60 bg-card border-r border-border/50 overflow-y-auto">
       <div className="space-y-1 p-2">
-        <SidebarItem icon={Home} label="Dashboard" path="/" isActive={currentPath === '/'} />
-        <SidebarItem icon={Wifi} label="Network" path="/network" isActive={currentPath === '/network'} />
-        <SidebarItem icon={Database} label="Devices" path="/devices" isActive={currentPath === '/devices'} />
-        <SidebarItem icon={Shield} label="Security" path="/security" isActive={currentPath === '/security'} />
-        <SidebarItem icon={AlertTriangle} label="Threats" path="/threats" isActive={currentPath === '/threats'} />
-        <SidebarItem icon={Activity} label="Monitoring" path="/monitoring" isActive={currentPath === '/monitoring'} />
-        <SidebarItem icon={History} label="Statistics" path="/statistics" isActive={currentPath === '/statistics'} />
+        <SidebarItem 
+          icon={Home} 
+          label="Dashboard" 
+          path="/dashboard" 
+          isActive={currentPath === '/dashboard'} 
+        />
+        <SidebarItem 
+          icon={Wifi} 
+          label="Network" 
+          path="/dashboard/network" 
+          isActive={currentPath === '/dashboard/network'} 
+        />
+        <SidebarItem 
+          icon={Database} 
+          label="Devices" 
+          path="/dashboard/devices" 
+          isActive={currentPath === '/dashboard/devices'} 
+        />
+        <SidebarItem 
+          icon={Shield} 
+          label="Security" 
+          path="/dashboard/security" 
+          isActive={currentPath === '/dashboard/security'} 
+        />
+        <SidebarItem 
+          icon={AlertTriangle} 
+          label="Threats" 
+          path="/dashboard/threats" 
+          isActive={currentPath === '/dashboard/threats'} 
+        />
+        <SidebarItem 
+          icon={Activity} 
+          label="Monitoring" 
+          path="/dashboard/monitoring" 
+          isActive={currentPath === '/dashboard/monitoring'} 
+        />
+        <SidebarItem 
+          icon={History} 
+          label="Statistics" 
+          path="/dashboard/statistics" 
+          isActive={currentPath === '/dashboard/statistics'} 
+        />
       </div>
       
       <div className="mt-auto space-y-1 p-2 pt-4 border-t border-border/30">
-        <SidebarItem icon={Settings} label="Settings" path="/settings" isActive={currentPath === '/settings'} />
-        <SidebarItem icon={HelpCircle} label="Help" path="/help" isActive={currentPath === '/help'} />
+        <SidebarItem 
+          icon={Settings} 
+          label="Settings" 
+          path="/dashboard/settings" 
+          isActive={currentPath === '/dashboard/settings'} 
+        />
+        <SidebarItem 
+          icon={HelpCircle} 
+          label="Help" 
+          path="/dashboard/help" 
+          isActive={currentPath === '/dashboard/help'} 
+        />
       </div>
     </aside>
   );

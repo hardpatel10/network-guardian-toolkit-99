@@ -18,6 +18,13 @@ import HelpPage from "./pages/HelpPage";
 import SettingsPage from "./pages/SettingsPage";
 import { apiService } from "./services/apiService";
 
+// New front website pages
+import HomePage from "./pages/front/HomePage";
+import AboutPage from "./pages/front/AboutPage";
+import FeaturesPage from "./pages/front/FeaturesPage";
+import AboutUsPage from "./pages/front/AboutUsPage";
+import ContactUsPage from "./pages/front/ContactUsPage";
+
 // Create the query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,15 +82,24 @@ const AppContent = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/statistics" element={<Statistics />} />
-      <Route path="/devices" element={<DevicesPage />} />
-      <Route path="/network" element={<NetworkPage />} />
-      <Route path="/security" element={<SecurityPage />} />
-      <Route path="/threats" element={<ThreatsPage />} />
-      <Route path="/monitoring" element={<MonitoringPage />} />
-      <Route path="/help" element={<HelpPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
+      {/* Front website routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/features" element={<FeaturesPage />} />
+      <Route path="/about-us" element={<AboutUsPage />} />
+      <Route path="/contact-us" element={<ContactUsPage />} />
+      
+      {/* Dashboard routes */}
+      <Route path="/dashboard" element={<Index />} />
+      <Route path="/dashboard/statistics" element={<Statistics />} />
+      <Route path="/dashboard/devices" element={<DevicesPage />} />
+      <Route path="/dashboard/network" element={<NetworkPage />} />
+      <Route path="/dashboard/security" element={<SecurityPage />} />
+      <Route path="/dashboard/threats" element={<ThreatsPage />} />
+      <Route path="/dashboard/monitoring" element={<MonitoringPage />} />
+      <Route path="/dashboard/help" element={<HelpPage />} />
+      <Route path="/dashboard/settings" element={<SettingsPage />} />
+      
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
