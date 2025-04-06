@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -22,6 +21,7 @@ import {
   ShieldAlert, 
   Shield
 } from 'lucide-react';
+import DeviceDetailsDialog from './DeviceDetailsDialog';
 
 interface DeviceListProps {
   disableScan?: boolean;
@@ -34,6 +34,8 @@ const DeviceList: React.FC<DeviceListProps> = ({ disableScan = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof NetworkDevice>('ip');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchDevices = async (forceRefresh = false) => {
@@ -102,13 +104,16 @@ const DeviceList: React.FC<DeviceListProps> = ({ disableScan = false }) => {
 
   const handleSort = (column: keyof NetworkDevice) => {
     if (sortColumn === column) {
-      // Toggle sort direction if same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new column and default to ascending
       setSortColumn(column);
       setSortDirection('asc');
     }
+  };
+
+  const handleDeviceClick = (device: NetworkDevice) => {
+    setSelectedDevice(device);
+    setIsDialogOpen(true);
   };
 
   const sortedDevices = [...filteredDevices].sort((a, b) => {
@@ -121,7 +126,6 @@ const DeviceList: React.FC<DeviceListProps> = ({ disableScan = false }) => {
         : bValue.localeCompare(aValue);
     }
     
-    // Fallback for non-string values
     return sortDirection === 'asc'
       ? String(aValue).localeCompare(String(bValue))
       : String(bValue).localeCompare(String(aValue));
@@ -232,7 +236,11 @@ const DeviceList: React.FC<DeviceListProps> = ({ disableScan = false }) => {
               </TableRow>
             ) : sortedDevices.length > 0 ? (
               sortedDevices.map((device, i) => (
-                <TableRow key={device.ip || i}>
+                <TableRow 
+                  key={device.ip || i} 
+                  className="cursor-pointer hover:bg-secondary/30"
+                  onClick={() => handleDeviceClick(device)}
+                >
                   <TableCell>{device.ip}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -268,6 +276,12 @@ const DeviceList: React.FC<DeviceListProps> = ({ disableScan = false }) => {
           </TableBody>
         </Table>
       </div>
+      
+      <DeviceDetailsDialog 
+        device={selectedDevice} 
+        isOpen={isDialogOpen} 
+        onClose={() => setIsDialogOpen(false)} 
+      />
     </div>
   );
 };

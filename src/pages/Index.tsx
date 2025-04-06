@@ -29,8 +29,13 @@ const Index: React.FC = () => {
   const performScan = async () => {
     setIsScanning(true);
     try {
+      // Force a refresh of the network scan
       await apiService.triggerScan();
-      setLastUpdated(new Date().toLocaleTimeString());
+      
+      // Update the last updated timestamp
+      const timestamp = apiService.getLastScanTimestamp();
+      setLastUpdated(new Date(timestamp).toLocaleTimeString());
+      
       toast({
         title: "Scan Complete",
         description: "Network scan has been completed successfully",
