@@ -13,6 +13,14 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
+    // First check display settings in localStorage
+    const displaySettings = localStorage.getItem('displaySettings');
+    if (displaySettings) {
+      const { darkMode } = JSON.parse(displaySettings);
+      return darkMode ? 'dark' : 'light';
+    }
+    
+    // If no display settings, fall back to theme setting
     const savedTheme = localStorage.getItem('theme');
     return (savedTheme as Theme) || 'dark'; // Default to dark theme
   });
@@ -26,6 +34,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+    }
+    
+    // Also update the darkMode in displaySettings if it exists
+    const displaySettings = localStorage.getItem('displaySettings');
+    if (displaySettings) {
+      const settings = JSON.parse(displaySettings);
+      settings.darkMode = theme === 'dark';
+      localStorage.setItem('displaySettings', JSON.stringify(settings));
     }
   }, [theme]);
 

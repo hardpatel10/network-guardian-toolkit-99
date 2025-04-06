@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -18,13 +17,15 @@ import {
   RefreshCw,
   Wifi,
   MonitorCheck,
-  Database
+  Database,
+  Download
 } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { apiService } from '@/services/apiService';
 
 const SettingsPage: React.FC = () => {
   // Get the theme context
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   
   const [scanning, setScanning] = useState({
     autoScan: true,
@@ -64,6 +65,7 @@ const SettingsPage: React.FC = () => {
       const savedNotifications = localStorage.getItem('notificationSettings');
       const savedSecurity = localStorage.getItem('securitySettings');
       const savedDisplay = localStorage.getItem('displaySettings');
+      const savedRetention = localStorage.getItem('retentionPeriod');
       
       if (savedScanning) setScanning(JSON.parse(savedScanning));
       if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
@@ -73,6 +75,7 @@ const SettingsPage: React.FC = () => {
         // Sync dark mode with theme context
         setDisplay({...parsedDisplay, darkMode: theme === 'dark'});
       }
+      if (savedRetention) setRetentionPeriod(savedRetention);
     };
     
     loadSettings();
@@ -82,6 +85,46 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     setDisplay(prev => ({...prev, darkMode: theme === 'dark'}));
   }, [theme]);
+
+  // Effect to apply display settings to the app
+  useEffect(() => {
+    if (display.compactView) {
+      document.body.classList.add('compact-view');
+    } else {
+      document.body.classList.remove('compact-view');
+    }
+
+    // Apply other display settings to be used by components
+    localStorage.setItem('showIPs', display.showIPs.toString());
+    localStorage.setItem('showMACs', display.showMACs.toString());
+    localStorage.setItem('showHostnames', display.showHostnames.toString());
+  }, [display]);
+
+  // Effect to apply scanning settings to the api service
+  useEffect(() => {
+    if (scanning) {
+      apiService.setConfig({
+        autoScan: scanning.autoScan,
+        scanInterval: parseInt(scanning.scanInterval || '12'),
+        deepScan: scanning.deepScan,
+        scanPorts: scanning.scanPorts,
+        osDetection: scanning.osDetection
+      });
+    }
+  }, [scanning]);
+
+  // Effect to apply security settings
+  useEffect(() => {
+    if (security) {
+      // Apply security settings to api service
+      apiService.setSecurityConfig({
+        autoBlock: security.autoBlock,
+        threatAnalysis: security.threatAnalysis,
+        saveHistory: security.saveHistory,
+        anonymousData: security.anonymousData
+      });
+    }
+  }, [security]);
   
   const { toast } = useToast();
   
@@ -95,6 +138,13 @@ const SettingsPage: React.FC = () => {
     localStorage.setItem('securitySettings', JSON.stringify(security));
     localStorage.setItem('displaySettings', JSON.stringify(display));
     localStorage.setItem('retentionPeriod', retentionPeriod);
+    
+    // Apply theme change if needed
+    if (display.darkMode && theme !== 'dark') {
+      setTheme('dark');
+    } else if (!display.darkMode && theme !== 'light') {
+      setTheme('light');
+    }
     
     toast({
       title: "Settings saved",
@@ -113,17 +163,89 @@ const SettingsPage: React.FC = () => {
     };
     setDisplay(defaultDisplay);
     if (defaultDisplay.darkMode !== (theme === 'dark')) {
-      toggleTheme();
+      setTheme(defaultDisplay.darkMode ? 'dark' : 'light');
     }
   };
 
   // Function to handle dark mode toggle
   const handleDarkModeToggle = (checked: boolean) => {
     setDisplay({...display, darkMode: checked});
-    if (checked !== (theme === 'dark')) {
-      toggleTheme();
+    setTheme(checked ? 'dark' : 'light');
+  };
+
+  // Function to export all settings
+  const exportSettings = () => {
+    const allData = {
+      scanning,
+      notifications,
+      security,
+      display,
+      retentionPeriod,
+      scanHistory: localStorage.getItem('scanHistory')
+    };
+    
+    const dataStr = JSON.stringify(allData, null, 4);
+    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+    const exportFileName = `network-guardian-settings-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileName);
+    linkElement.click();
+    
+    toast({
+      title: "Settings exported",
+      description: "Your settings have been exported successfully",
+    });
+  };
+
+  // Function to import settings from file
+  const importSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileInput = event.target;
+    if (fileInput.files && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          if (e.target?.result) {
+            const settings = JSON.parse(e.target.result as string);
+            
+            if (settings.scanning) setScanning(settings.scanning);
+            if (settings.notifications) setNotifications(settings.notifications);
+            if (settings.security) setSecurity(settings.security);
+            if (settings.display) {
+              setDisplay(settings.display);
+              // Apply theme
+              setTheme(settings.display.darkMode ? 'dark' : 'light');
+            }
+            if (settings.retentionPeriod) setRetentionPeriod(settings.retentionPeriod);
+            if (settings.scanHistory) localStorage.setItem('scanHistory', settings.scanHistory);
+            
+            // Save all the imported settings
+            handleSave();
+            
+            toast({
+              title: "Settings imported",
+              description: "Your settings have been imported successfully",
+            });
+          }
+        } catch (error) {
+          console.error("Error importing settings:", error);
+          toast({
+            title: "Import failed",
+            description: "Failed to import settings. The file may be corrupted.",
+            variant: "destructive"
+          });
+        }
+      };
+      
+      reader.readAsText(file);
     }
   };
+  
+  // Create a ref for the file input
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   return (
     <DashboardLayout>
@@ -655,6 +777,27 @@ const SettingsPage: React.FC = () => {
             <p className="text-sm text-muted-foreground">Version 1.0.0</p>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
+            <Button 
+              variant="outline"
+              onClick={exportSettings}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export Settings
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Database className="mr-2 h-4 w-4" />
+              Import Settings
+            </Button>
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".json"
+              onChange={importSettings}
+            />
             <Button 
               variant="outline"
               onClick={() => {
