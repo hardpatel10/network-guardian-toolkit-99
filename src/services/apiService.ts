@@ -41,21 +41,33 @@ export interface DeviceHistoryItem {
   last_seen: string;
 }
 
+// Global cache to store the latest scan result
+let cachedScanResult: NetworkScanResult | null = null;
+let lastScanTimestamp: number = 0;
+
 export const apiService = {
   /**
-   * Get network scan results
+   * Get network scan results from cache if available, otherwise perform a new scan
    */
-  async getNetworkScan(): Promise<NetworkScanResult> {
+  async getNetworkScan(forceRefresh = false): Promise<NetworkScanResult> {
+    if (cachedScanResult && !forceRefresh) {
+      return cachedScanResult;
+    }
+    
     try {
       const response = await fetch(`${API_BASE_URL}/hosts`);
       if (!response.ok) {
         throw new Error('Network scan failed');
       }
-      return await response.json();
+      const result = await response.json();
+      // Update cache
+      cachedScanResult = result;
+      lastScanTimestamp = Date.now();
+      return result;
     } catch (error) {
       console.error('Error fetching network scan:', error);
-      // Return empty result on error
-      return { current_ip: '', network_range: '', devices: [] };
+      // Return cached result if available, empty result otherwise
+      return cachedScanResult || { current_ip: '', network_range: '', devices: [] };
     }
   },
 
@@ -133,10 +145,29 @@ export const apiService = {
       if (!response.ok) {
         throw new Error('Failed to trigger scan');
       }
-      return await response.json();
+      const result = await response.json();
+      // Update cache
+      cachedScanResult = result;
+      lastScanTimestamp = Date.now();
+      return result;
     } catch (error) {
       console.error('Error triggering scan:', error);
       return { current_ip: '', network_range: '', devices: [] };
     }
+  },
+
+  /**
+   * Clear the cached scan results
+   */
+  clearScanCache(): void {
+    cachedScanResult = null;
+    lastScanTimestamp = 0;
+  },
+
+  /**
+   * Get the timestamp of the last scan
+   */
+  getLastScanTimestamp(): number {
+    return lastScanTimestamp;
   }
 };

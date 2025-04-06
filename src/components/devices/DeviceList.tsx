@@ -23,7 +23,11 @@ import {
   Shield
 } from 'lucide-react';
 
-const DeviceList: React.FC = () => {
+interface DeviceListProps {
+  disableScan?: boolean;
+}
+
+const DeviceList: React.FC<DeviceListProps> = ({ disableScan = false }) => {
   const [devices, setDevices] = useState<NetworkDevice[]>([]);
   const [filteredDevices, setFilteredDevices] = useState<NetworkDevice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,18 +36,21 @@ const DeviceList: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
 
-  const fetchDevices = async () => {
+  const fetchDevices = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const result = await apiService.getNetworkScan();
+      const result = await apiService.getNetworkScan(forceRefresh);
       if (result.devices) {
         setDevices(result.devices);
         setFilteredDevices(result.devices);
       }
-      toast({
-        title: "Scan complete",
-        description: `Found ${result.devices?.length || 0} devices on your network`
-      });
+      
+      if (forceRefresh) {
+        toast({
+          title: "Scan complete",
+          description: `Found ${result.devices?.length || 0} devices on your network`
+        });
+      }
     } catch (error) {
       console.error('Error fetching devices:', error);
       toast({
@@ -164,18 +171,20 @@ const DeviceList: React.FC = () => {
             <Download className="mr-2 h-4 w-4" />
             Export JSON
           </Button>
-          <Button 
-            onClick={fetchDevices}
-            disabled={isLoading}
-            className="whitespace-nowrap"
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Scan Now
-          </Button>
+          {!disableScan && (
+            <Button 
+              onClick={() => fetchDevices(true)}
+              disabled={isLoading}
+              className="whitespace-nowrap"
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Refresh Data
+            </Button>
+          )}
         </div>
       </div>
 
@@ -217,7 +226,7 @@ const DeviceList: React.FC = () => {
                 <TableCell colSpan={6} className="text-center py-8">
                   <div className="flex flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                    <p className="text-muted-foreground">Scanning network...</p>
+                    <p className="text-muted-foreground">Loading device data...</p>
                   </div>
                 </TableCell>
               </TableRow>

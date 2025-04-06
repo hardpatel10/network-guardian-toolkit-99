@@ -159,6 +159,7 @@ const ThreatsPage: React.FC = () => {
   }[]>([]);
   const [expandedThreats, setExpandedThreats] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('Never');
   const { toast } = useToast();
 
   const toggleThreat = (index: number) => {
@@ -169,10 +170,10 @@ const ThreatsPage: React.FC = () => {
     }
   };
 
-  const fetchThreats = async () => {
+  const fetchThreats = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const scanResult = await apiService.getNetworkScan();
+      const scanResult = await apiService.getNetworkScan(forceRefresh);
       const devices = scanResult.devices || [];
       
       const newThreats: {
@@ -242,10 +243,17 @@ const ThreatsPage: React.FC = () => {
       setSecurityScore(Math.max(0, Math.min(100, score)));
       setThreats(newThreats);
       
-      toast({
-        title: "Threat scan complete",
-        description: `Found ${newThreats.length} potential security issues`,
-      });
+      const timestamp = apiService.getLastScanTimestamp();
+      if (timestamp) {
+        setLastUpdated(new Date(timestamp).toLocaleTimeString());
+      }
+      
+      if (forceRefresh) {
+        toast({
+          title: "Threat scan complete",
+          description: `Found ${newThreats.length} potential security issues`,
+        });
+      }
     } catch (error) {
       console.error("Error fetching threats:", error);
       toast({
@@ -295,14 +303,17 @@ const ThreatsPage: React.FC = () => {
               Monitor and address potential security threats
             </p>
           </div>
-          <Button
-            onClick={fetchThreats}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Scan for Threats
-          </Button>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">Last updated: {lastUpdated}</p>
+            <Button
+              onClick={() => fetchThreats(true)}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Refresh Analysis
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="current">

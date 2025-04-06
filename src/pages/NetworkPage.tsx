@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -171,14 +170,27 @@ const NetworkPage: React.FC = () => {
   const [filteredDevices, setFilteredDevices] = useState<NetworkDevice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<string>('Never');
   const { toast } = useToast();
   
-  const fetchNetworkDevices = async () => {
+  const fetchNetworkDevices = async (forceRefresh = false) => {
     setIsLoading(true);
     try {
-      const result = await apiService.getNetworkScan();
+      const result = await apiService.getNetworkScan(forceRefresh);
       setDevices(result.devices || []);
       setFilteredDevices(result.devices || []);
+      
+      const timestamp = apiService.getLastScanTimestamp();
+      if (timestamp) {
+        setLastUpdated(new Date(timestamp).toLocaleTimeString());
+      }
+      
+      if (forceRefresh) {
+        toast({
+          title: "Data Refreshed",
+          description: "Network device data has been updated"
+        });
+      }
     } catch (error) {
       console.error('Error fetching devices:', error);
       toast({
@@ -219,7 +231,7 @@ const NetworkPage: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between">
           <div className="flex-1 relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -229,13 +241,16 @@ const NetworkPage: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button 
-            onClick={fetchNetworkDevices}
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Refresh
-          </Button>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">Last updated: {lastUpdated}</p>
+            <Button 
+              onClick={() => fetchNetworkDevices(true)}
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Refresh Data
+            </Button>
+          </div>
         </div>
         
         <Tabs defaultValue="map">
