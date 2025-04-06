@@ -50,6 +50,17 @@ const DeviceDetailsDialog: React.FC<DeviceDetailsDialogProps> = ({
     </Badge>;
   };
 
+  // Helper function to safely convert values to string
+  const safeToString = (value: unknown): string => {
+    if (value === null || value === undefined) {
+      return 'Not available';
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
@@ -116,9 +127,9 @@ const DeviceDetailsDialog: React.FC<DeviceDetailsDialogProps> = ({
                     <div>
                       {typeof device.netbios === 'object' && device.netbios ? 
                         Object.entries(device.netbios).map(([key, value]) => (
-                          <div key={key}>{key}: {value}</div>
+                          <div key={key}>{key}: {safeToString(value)}</div>
                         )) : 
-                        (device.netbios || 'Not detected')}
+                        (safeToString(device.netbios) || 'Not detected')}
                     </div>
                   </div>
                 </div>
@@ -164,7 +175,7 @@ const DeviceDetailsDialog: React.FC<DeviceDetailsDialogProps> = ({
                 <h3 className="text-sm font-medium">Traceroute</h3>
                 <div className="border rounded-md p-2 bg-secondary/20">
                   <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-                    {device.traceout || 'No traceroute data available'}
+                    {safeToString(device.traceout) || 'No traceroute data available'}
                   </pre>
                 </div>
               </div>
@@ -190,3 +201,4 @@ const DeviceDetailsDialog: React.FC<DeviceDetailsDialogProps> = ({
 };
 
 export default DeviceDetailsDialog;
+
