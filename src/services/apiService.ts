@@ -41,9 +41,37 @@ export interface DeviceHistoryItem {
   last_seen: string;
 }
 
+export interface ScanConfig {
+  autoScan: boolean;
+  scanInterval: number;
+  deepScan: boolean;
+  scanPorts: boolean;
+  osDetection: boolean;
+}
+
+export interface SecurityConfig {
+  autoBlock: boolean;
+  threatAnalysis: boolean;
+  saveHistory: boolean;
+  anonymousData: boolean;
+}
+
 // Global cache to store the latest scan result
 let cachedScanResult: NetworkScanResult | null = null;
 let lastScanTimestamp: number = 0;
+let scanConfig: ScanConfig = {
+  autoScan: true,
+  scanInterval: 12,
+  deepScan: false,
+  scanPorts: true,
+  osDetection: true
+};
+let securityConfig: SecurityConfig = {
+  autoBlock: false,
+  threatAnalysis: true,
+  saveHistory: true,
+  anonymousData: false
+};
 
 export const apiService = {
   /**
@@ -169,5 +197,35 @@ export const apiService = {
    */
   getLastScanTimestamp(): number {
     return lastScanTimestamp;
+  },
+
+  /**
+   * Set scan configuration
+   */
+  setConfig(config: ScanConfig): void {
+    scanConfig = { ...scanConfig, ...config };
+    console.log('Scan config updated:', scanConfig);
+  },
+
+  /**
+   * Get scan configuration
+   */
+  getConfig(): ScanConfig {
+    return { ...scanConfig };
+  },
+
+  /**
+   * Set security configuration
+   */
+  setSecurityConfig(config: SecurityConfig): void {
+    securityConfig = { ...securityConfig, ...config };
+    console.log('Security config updated:', securityConfig);
+  },
+
+  /**
+   * Get security configuration
+   */
+  getSecurityConfig(): SecurityConfig {
+    return { ...securityConfig };
   }
 };
