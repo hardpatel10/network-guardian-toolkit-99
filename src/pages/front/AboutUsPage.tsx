@@ -15,37 +15,19 @@ const teamMembers: TeamMember[] = [
   {
     name: "Alex Johnson",
     role: "Founder & CEO",
-    bio: "Alex has over 15 years of experience in network security and founded Network Guardian to make advanced security tools accessible to everyone.",
+    bio: "Alex has over 15 years of experience in network security and founded Network Guardian to make advanced security tools accessible to everyone. With a background in ethical hacking and cybersecurity, Alex leads our vision of creating a safer digital world.",
     avatarUrl: "/placeholder.svg"
   },
   {
     name: "Sam Rivera",
     role: "CTO",
-    bio: "Sam leads our technical development with expertise in cybersecurity and a passion for creating intuitive security solutions.",
+    bio: "Sam leads our technical development with expertise in cybersecurity and a passion for creating intuitive security solutions. Having previously worked at major tech companies securing enterprise networks, Sam brings invaluable expertise to our product development.",
     avatarUrl: "/placeholder.svg"
   },
   {
     name: "Jamie Chen",
     role: "Head of Security Research",
-    bio: "Jamie's extensive background in threat intelligence helps shape our approach to identifying and mitigating network vulnerabilities.",
-    avatarUrl: "/placeholder.svg"
-  },
-  {
-    name: "Taylor Morgan",
-    role: "UX Director",
-    bio: "Taylor ensures that our powerful security tools remain accessible and user-friendly for clients of all technical levels.",
-    avatarUrl: "/placeholder.svg"
-  },
-  {
-    name: "Jordan Smith",
-    role: "Product Manager",
-    bio: "Jordan works closely with clients to understand their needs and translate them into the features that make Network Guardian exceptional.",
-    avatarUrl: "/placeholder.svg"
-  },
-  {
-    name: "Casey Wilson",
-    role: "Customer Success Lead",
-    bio: "Casey is dedicated to ensuring our clients get the most out of Network Guardian through training and responsive support.",
+    bio: "Jamie's extensive background in threat intelligence helps shape our approach to identifying and mitigating network vulnerabilities. With a PhD in Computer Science and numerous publications on network security, Jamie ensures our products stay ahead of emerging threats.",
     avatarUrl: "/placeholder.svg"
   }
 ];
@@ -58,7 +40,7 @@ const AboutUsPage: React.FC = () => {
         <div className="container mx-auto text-center">
           <h1 className="text-4xl font-bold mb-6">Our Team</h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground">
-            Meet the dedicated professionals behind Network Guardian who are passionate about network security
+            Meet the dedicated professionals behind Network Guardian who are passionate about network security and committed to protecting your digital assets
           </p>
         </div>
       </section>
@@ -66,19 +48,17 @@ const AboutUsPage: React.FC = () => {
       {/* Team Section */}
       <section className="py-16 px-4 bg-background">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <Card key={index} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <Avatar className="h-24 w-24 mb-4">
-                      <AvatarImage src={member.avatarUrl} alt={member.name} />
-                      <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <h3 className="text-xl font-bold">{member.name}</h3>
-                    <p className="text-primary mb-4">{member.role}</p>
-                    <p className="text-muted-foreground text-center">{member.bio}</p>
-                  </div>
+              <Card key={index} className="overflow-hidden h-full">
+                <CardContent className="p-6 flex flex-col items-center h-full">
+                  <Avatar className="h-32 w-32 mb-6">
+                    <AvatarImage src={member.avatarUrl} alt={member.name} />
+                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="text-2xl font-bold">{member.name}</h3>
+                  <p className="text-primary mb-4">{member.role}</p>
+                  <p className="text-muted-foreground text-center">{member.bio}</p>
                 </CardContent>
               </Card>
             ))}
@@ -87,7 +67,7 @@ const AboutUsPage: React.FC = () => {
       </section>
 
       {/* Company Values */}
-      <section className="py-16 px-4 bg-card">
+      <section className="py-16 px-4 bg-muted">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -142,9 +122,20 @@ const AboutUsPage: React.FC = () => {
             </p>
             <p className="text-lg text-muted-foreground">
               Our commitment to democratizing network security remains at the core of everything we do as we continue 
-              to grow and expand our capabilities.
+              to grow and expand our capabilities. We believe everyone deserves access to powerful, easy-to-use security tools.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Mission Statement */}
+      <section className="py-16 px-4 bg-card">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-8">Our Mission</h2>
+          <p className="text-xl max-w-3xl mx-auto">
+            "To empower individuals and organizations with accessible, powerful network security tools that protect 
+            digital assets and create a safer connected world."
+          </p>
         </div>
       </section>
     </FrontLayout>

@@ -18,12 +18,14 @@ import HelpPage from "./pages/HelpPage";
 import SettingsPage from "./pages/SettingsPage";
 import { apiService } from "./services/apiService";
 
-// New front website pages
+// Front website pages
 import HomePage from "./pages/front/HomePage";
 import AboutPage from "./pages/front/AboutPage";
 import FeaturesPage from "./pages/front/FeaturesPage";
 import AboutUsPage from "./pages/front/AboutUsPage";
 import ContactUsPage from "./pages/front/ContactUsPage";
+import PrivacyPolicyPage from "./pages/front/PrivacyPolicyPage";
+import TermsPage from "./pages/front/TermsPage";
 
 // Create the query client
 const queryClient = new QueryClient({
@@ -88,6 +90,8 @@ const AppContent = () => {
       <Route path="/features" element={<FeaturesPage />} />
       <Route path="/about-us" element={<AboutUsPage />} />
       <Route path="/contact-us" element={<ContactUsPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       
       {/* Dashboard routes */}
       <Route path="/dashboard" element={<Index />} />

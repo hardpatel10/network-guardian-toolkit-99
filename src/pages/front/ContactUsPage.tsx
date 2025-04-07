@@ -50,7 +50,7 @@ const ContactUsPage: React.FC = () => {
         <div className="container mx-auto text-center">
           <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground">
-            Have questions or feedback? We'd love to hear from you
+            Have questions or feedback? We'd love to hear from you. Our team is ready to assist with any inquiries about our network security solutions.
           </p>
         </div>
       </section>
@@ -89,8 +89,9 @@ const ContactUsPage: React.FC = () => {
                     <div>
                       <h3 className="font-semibold">Address</h3>
                       <p className="text-muted-foreground">
-                        123 Security Street<br />
-                        Network City, NC 12345
+                        GLS University<br />
+                        Law Garden, Ahmedabad<br />
+                        Gujarat, India
                       </p>
                     </div>
                   </CardContent>
@@ -99,8 +100,8 @@ const ContactUsPage: React.FC = () => {
               
               <div className="mt-8">
                 <h3 className="text-xl font-semibold mb-4">Support Hours</h3>
-                <p className="text-muted-foreground mb-2">Monday to Friday: 9am - 6pm EST</p>
-                <p className="text-muted-foreground">Saturday: 10am - 4pm EST</p>
+                <p className="text-muted-foreground mb-2">Monday to Friday: 9am - 6pm IST</p>
+                <p className="text-muted-foreground">Saturday: 10am - 4pm IST</p>
                 <p className="text-muted-foreground">Sunday: Closed</p>
               </div>
             </div>
@@ -187,11 +188,20 @@ const ContactUsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Map Section (Placeholder) */}
+      {/* Map Section */}
       <section className="py-8 px-4 bg-background">
         <div className="container mx-auto">
-          <div className="w-full h-80 bg-muted rounded-lg flex items-center justify-center">
-            <p className="text-muted-foreground">Interactive Map Would Be Displayed Here</p>
+          <h2 className="text-2xl font-bold mb-6 text-center">Our Location</h2>
+          <div className="w-full h-96 rounded-lg overflow-hidden border border-border/50 shadow-md">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3669.3526488107526!2d72.55919903473412!3d23.02654092752954!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e84391e041b65%3A0x6baf7b88850b8b5!2sGLS%20University!5e0!3m2!1sen!2sin!4v1616784330000" 
+              className="w-full h-full"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="GLS University Location"
+            ></iframe>
           </div>
         </div>
       </section>
