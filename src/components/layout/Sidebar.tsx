@@ -9,11 +9,12 @@ interface SidebarItemProps {
   label: string;
   path: string;
   isActive?: boolean;
+  onClick?: () => void;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, path, isActive = false }) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, path, isActive = false, onClick }) => {
   return (
-    <Link to={path}>
+    <Link to={path} onClick={onClick}>
       <Button
         variant="ghost"
         className={`w-full justify-start gap-3 ${
@@ -27,54 +28,65 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, path, isAc
   );
 };
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onItemClick?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onItemClick }) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
   return (
-    <aside className="hidden md:flex flex-col w-60 bg-card border-r border-border/50 overflow-y-auto">
+    <aside className="flex flex-col w-60 bg-card border-r border-border/50 overflow-y-auto">
       <div className="space-y-1 p-2">
         <SidebarItem 
           icon={Home} 
           label="Dashboard" 
           path="/dashboard" 
           isActive={currentPath === '/dashboard'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={Wifi} 
           label="Network" 
           path="/dashboard/network" 
           isActive={currentPath === '/dashboard/network'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={Database} 
           label="Devices" 
           path="/dashboard/devices" 
           isActive={currentPath === '/dashboard/devices'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={Shield} 
           label="Security" 
           path="/dashboard/security" 
           isActive={currentPath === '/dashboard/security'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={AlertTriangle} 
           label="Threats" 
           path="/dashboard/threats" 
           isActive={currentPath === '/dashboard/threats'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={Activity} 
           label="Monitoring" 
           path="/dashboard/monitoring" 
           isActive={currentPath === '/dashboard/monitoring'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={History} 
           label="Statistics" 
           path="/dashboard/statistics" 
           isActive={currentPath === '/dashboard/statistics'} 
+          onClick={onItemClick}
         />
       </div>
       
@@ -84,12 +96,14 @@ const Sidebar: React.FC = () => {
           label="Settings" 
           path="/dashboard/settings" 
           isActive={currentPath === '/dashboard/settings'} 
+          onClick={onItemClick}
         />
         <SidebarItem 
           icon={HelpCircle} 
           label="Help" 
           path="/dashboard/help" 
           isActive={currentPath === '/dashboard/help'} 
+          onClick={onItemClick}
         />
       </div>
     </aside>
