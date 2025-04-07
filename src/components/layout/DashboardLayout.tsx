@@ -4,7 +4,6 @@ import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
-import { Menu } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
