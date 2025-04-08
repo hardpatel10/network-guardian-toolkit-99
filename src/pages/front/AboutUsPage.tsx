@@ -9,7 +9,8 @@ interface TeamMember {
   name: string;
   role: string;
   bio: string;
-  avatarUrl?: string;
+  avatarUrl: string;
+  initial: string;
 }
 
 const teamMembers: TeamMember[] = [
@@ -17,25 +18,29 @@ const teamMembers: TeamMember[] = [
     name: "Hard Pansara",
     role: "Developer",
     bio: "Hard is an experienced developer with expertise in network security and a passion for creating intuitive security tools. He focuses on backend architecture and security protocol implementation.",
-    avatarUrl: "/placeholder.svg"
+    avatarUrl: "https://api.dicebear.com/7.x/initials/svg?seed=HP&backgroundColor=0ea5e9",
+    initial: "HP"
   },
   {
     name: "Yug Thacker",
     role: "Developer",
     bio: "Yug specializes in frontend development and user experience design. His work ensures that our security tools are accessible and easy to use for all users regardless of their technical background.",
-    avatarUrl: "/placeholder.svg"
+    avatarUrl: "https://api.dicebear.com/7.x/initials/svg?seed=YT&backgroundColor=0ea5e9",
+    initial: "YT"
   },
   {
     name: "Aaditya Thacker",
     role: "Developer",
     bio: "Aaditya leads our threat intelligence research, helping to identify and mitigate network vulnerabilities. His technical expertise in cybersecurity is invaluable to the development of our security features.",
-    avatarUrl: "/placeholder.svg"
+    avatarUrl: "https://api.dicebear.com/7.x/initials/svg?seed=AT&backgroundColor=0ea5e9",
+    initial: "AT"
   },
   {
     name: "Dev Koshti",
     role: "Developer",
     bio: "Dev focuses on system architecture and performance optimization. His work ensures that our security applications run efficiently and can scale to meet the needs of both individual users and organizations.",
-    avatarUrl: "/placeholder.svg"
+    avatarUrl: "https://api.dicebear.com/7.x/initials/svg?seed=DK&backgroundColor=0ea5e9",
+    initial: "DK"
   }
 ];
 
@@ -68,7 +73,7 @@ const AboutUsPage: React.FC = () => {
                     <Avatar className="h-32 w-32 relative">
                       <AvatarImage src={member.avatarUrl} alt={member.name} />
                       <AvatarFallback className="bg-gradient-to-br from-primary/80 to-accent/80 text-white text-2xl">
-                        {member.name.charAt(0)}
+                        {member.initial}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -181,6 +186,106 @@ const AboutUsPage: React.FC = () => {
               "To empower individuals and organizations with accessible, powerful network security tools that protect 
               digital assets and create a safer connected world."
             </p>
+          </div>
+        </div>
+      </section>
+      
+      {/* Team Skills Section */}
+      <section className="py-16 px-4 bg-background relative">
+        <div className="absolute inset-0 bg-cyber-grid opacity-5"></div>
+        <div className="container mx-auto relative z-10">
+          <h2 className="text-3xl font-bold text-center mb-8 animated-gradient-text inline-block mx-auto">Our Expertise</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-card/80 backdrop-blur-sm rounded-lg border border-border/50 p-6 hover-lift">
+              <h3 className="text-xl font-semibold mb-4">Technical Proficiency</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Network Security</span>
+                    <span className="text-sm font-medium">95%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '95%' }}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Device Detection</span>
+                    <span className="text-sm font-medium">90%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '90%' }}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Threat Analysis</span>
+                    <span className="text-sm font-medium">88%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '88%' }}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Penetration Testing</span>
+                    <span className="text-sm font-medium">85%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '85%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-card/80 backdrop-blur-sm rounded-lg border border-border/50 p-6 hover-lift">
+              <h3 className="text-xl font-semibold mb-4">Development Expertise</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">User Interface Design</span>
+                    <span className="text-sm font-medium">92%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-accent h-2.5 rounded-full" style={{ width: '92%' }}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Backend Architecture</span>
+                    <span className="text-sm font-medium">94%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-accent h-2.5 rounded-full" style={{ width: '94%' }}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Performance Optimization</span>
+                    <span className="text-sm font-medium">89%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-accent h-2.5 rounded-full" style={{ width: '89%' }}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Data Visualization</span>
+                    <span className="text-sm font-medium">87%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div className="bg-accent h-2.5 rounded-full" style={{ width: '87%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

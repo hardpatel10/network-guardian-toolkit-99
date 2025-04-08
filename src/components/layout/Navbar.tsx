@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Shield, Settings, Bell, Menu, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Settings, Bell, Menu, ExternalLink, X, AlertTriangle, Info, Check, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -10,12 +10,113 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from 'date-fns';
+
+interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: Date;
+  type: 'alert' | 'info' | 'success';
+  read: boolean;
+}
+
+// Sample notifications
+const sampleNotifications: Notification[] = [
+  {
+    id: '1',
+    title: 'Security Alert',
+    description: 'Unauthorized device detected on your network',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+    type: 'alert',
+    read: false
+  },
+  {
+    id: '2',
+    title: 'Scan Complete',
+    description: 'Network vulnerability scan completed successfully',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    type: 'success',
+    read: false
+  },
+  {
+    id: '3',
+    title: 'System Update',
+    description: 'New security definitions have been installed',
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+    type: 'info',
+    read: true
+  },
+  {
+    id: '4',
+    title: 'Port Scan Detected',
+    description: 'Possible scanning activity from IP 192.168.1.45',
+    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
+    type: 'alert',
+    read: true
+  },
+  {
+    id: '5',
+    title: 'Device Status',
+    description: 'Your router firmware is outdated and needs an update',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
+    type: 'info',
+    read: true
+  }
+];
+
+const NotificationIcon = ({ type }: { type: string }) => {
+  switch (type) {
+    case 'alert':
+      return <AlertTriangle className="h-4 w-4 text-security-alert" />;
+    case 'info':
+      return <Info className="h-4 w-4 text-security-DEFAULT" />;
+    case 'success':
+      return <Check className="h-4 w-4 text-security-safe" />;
+    default:
+      return <Info className="h-4 w-4" />;
+  }
+};
 
 const Navbar: React.FC = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
   const isMobile = useIsMobile();
+  
+  const unreadCount = notifications.filter(n => !n.read).length;
+  
+  const markAllAsRead = () => {
+    setNotifications(prevNotifications => 
+      prevNotifications.map(notification => ({
+        ...notification,
+        read: true
+      }))
+    );
+  };
+  
+  const markAsRead = (id: string) => {
+    setNotifications(prevNotifications => 
+      prevNotifications.map(notification => 
+        notification.id === id 
+          ? { ...notification, read: true } 
+          : notification
+      )
+    );
+  };
+  
+  const removeNotification = (id: string) => {
+    setNotifications(prevNotifications => 
+      prevNotifications.filter(notification => notification.id !== id)
+    );
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center bg-card/80 backdrop-blur-sm border-b border-border/50 px-4">
@@ -192,10 +293,111 @@ const Navbar: React.FC = () => {
             <span className="hidden sm:inline">Main Site</span>
           </Button>
         </Link>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-security-alert"></span>
-        </Button>
+        
+        <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-security-alert text-white text-xs">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="end">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="font-medium">Notifications</h3>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs h-8"
+                  onClick={markAllAsRead}
+                >
+                  Mark all as read
+                </Button>
+              </div>
+            </div>
+            
+            {notifications.length > 0 ? (
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-1 p-1">
+                  {notifications.map(notification => (
+                    <div 
+                      key={notification.id}
+                      className={`p-3 hover:bg-muted/50 rounded-md transition-colors ${notification.read ? 'opacity-70' : 'bg-muted/20'}`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-3">
+                          <div className={`mt-0.5 p-1.5 rounded-full 
+                            ${notification.type === 'alert' ? 'bg-security-alert/10' : 
+                              notification.type === 'info' ? 'bg-security-DEFAULT/10' : 
+                              'bg-security-safe/10'}`}
+                          >
+                            <NotificationIcon type={notification.type} />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <p className="text-sm font-medium">{notification.title}</p>
+                              {!notification.read && (
+                                <span className="h-2 w-2 rounded-full bg-security-alert"></span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{notification.description}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(notification.timestamp, 'MMM d, h:mm a')}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5">
+                          {!notification.read && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => markAsRead(notification.id)}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6"
+                            onClick={() => removeNotification(notification.id)}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="py-12 px-4 text-center">
+                <Server className="h-10 w-10 text-muted-foreground/40 mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">No notifications</p>
+              </div>
+            )}
+            
+            <div className="p-4 border-t border-border">
+              <Link to="/dashboard/monitoring">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-xs"
+                  onClick={() => setIsNotificationsOpen(false)}
+                >
+                  View All Notifications
+                </Button>
+              </Link>
+            </div>
+          </PopoverContent>
+        </Popover>
+
         <Link to="/dashboard/settings">
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
