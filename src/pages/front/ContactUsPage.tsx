@@ -68,7 +68,9 @@ const ContactUsPage: React.FC = () => {
                     <Mail className="h-10 w-10 text-primary" />
                     <div>
                       <h3 className="font-semibold">Email</h3>
-                      <p className="text-muted-foreground">info@networkguardian.com</p>
+                      <a href="mailto:info@networkguardian.in" className="text-muted-foreground hover:text-primary transition-colors">
+                        info@networkguardian.in
+                      </a>
                     </div>
                   </CardContent>
                 </Card>
@@ -78,7 +80,9 @@ const ContactUsPage: React.FC = () => {
                     <Phone className="h-10 w-10 text-primary" />
                     <div>
                       <h3 className="font-semibold">Phone</h3>
-                      <p className="text-muted-foreground">(123) 456-7890</p>
+                      <a href="tel:+919876543210" className="text-muted-foreground hover:text-primary transition-colors">
+                        +91 98765 43210
+                      </a>
                     </div>
                   </CardContent>
                 </Card>

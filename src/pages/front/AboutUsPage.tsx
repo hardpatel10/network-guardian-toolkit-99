@@ -13,21 +13,27 @@ interface TeamMember {
 
 const teamMembers: TeamMember[] = [
   {
-    name: "Alex Johnson",
-    role: "Founder & CEO",
-    bio: "Alex has over 15 years of experience in network security and founded Network Guardian to make advanced security tools accessible to everyone. With a background in ethical hacking and cybersecurity, Alex leads our vision of creating a safer digital world.",
+    name: "Hard Pansara",
+    role: "Developer",
+    bio: "Hard is an experienced developer with expertise in network security and a passion for creating intuitive security tools. He focuses on backend architecture and security protocol implementation.",
     avatarUrl: "/placeholder.svg"
   },
   {
-    name: "Sam Rivera",
-    role: "CTO",
-    bio: "Sam leads our technical development with expertise in cybersecurity and a passion for creating intuitive security solutions. Having previously worked at major tech companies securing enterprise networks, Sam brings invaluable expertise to our product development.",
+    name: "Yug Thacker",
+    role: "Developer",
+    bio: "Yug specializes in frontend development and user experience design. His work ensures that our security tools are accessible and easy to use for all users regardless of their technical background.",
     avatarUrl: "/placeholder.svg"
   },
   {
-    name: "Jamie Chen",
-    role: "Head of Security Research",
-    bio: "Jamie's extensive background in threat intelligence helps shape our approach to identifying and mitigating network vulnerabilities. With a PhD in Computer Science and numerous publications on network security, Jamie ensures our products stay ahead of emerging threats.",
+    name: "Aaditya Thacker",
+    role: "Developer",
+    bio: "Aaditya leads our threat intelligence research, helping to identify and mitigate network vulnerabilities. His technical expertise in cybersecurity is invaluable to the development of our security features.",
+    avatarUrl: "/placeholder.svg"
+  },
+  {
+    name: "Dev Koshti",
+    role: "Developer",
+    bio: "Dev focuses on system architecture and performance optimization. His work ensures that our security applications run efficiently and can scale to meet the needs of both individual users and organizations.",
     avatarUrl: "/placeholder.svg"
   }
 ];
@@ -48,7 +54,7 @@ const AboutUsPage: React.FC = () => {
       {/* Team Section */}
       <section className="py-16 px-4 bg-background">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
               <Card key={index} className="overflow-hidden h-full">
                 <CardContent className="p-6 flex flex-col items-center h-full">
@@ -108,21 +114,17 @@ const AboutUsPage: React.FC = () => {
           <h2 className="text-3xl font-bold text-center mb-12">Our Story</h2>
           <div className="max-w-3xl mx-auto">
             <p className="text-lg mb-6 text-muted-foreground">
-              Network Guardian was founded in 2019 by Alex Johnson, an experienced network security professional who 
-              recognized the need for more accessible security tools in an increasingly connected world.
+              <strong>The Inspiration Behind Our Tool</strong><br />
+              It all started when we noticed an unfamiliar device connected to our home network. Concerned about potential security risks, we manually checked connected devices, only to realize how time-consuming and inefficient the process was. This raised a crucial question—how many people unknowingly have unauthorized devices on their networks, exposing them to data theft and privacy breaches?
             </p>
             <p className="text-lg mb-6 text-muted-foreground">
-              What began as a simple tool for personal network monitoring has evolved into a comprehensive toolkit 
-              used by individuals and organizations worldwide to secure their networks and protect their digital assets.
+              <strong>Solution</strong><br />
+              Determined to find a solution, we developed a tool that automates the detection of untrusted devices by scanning network details, identifying open ports, and enabling users to take action against potential threats. By making this process accessible and efficient, we aim to empower individuals and organizations to protect their networks and ensure digital privacy with ease.
             </p>
-            <p className="text-lg mb-6 text-muted-foreground">
+            <p className="text-lg text-muted-foreground">
               Today, our team of dedicated security experts, developers, and user experience professionals work 
               together to continuously improve Network Guardian, making it more powerful, intuitive, and responsive 
               to the evolving needs of our users.
-            </p>
-            <p className="text-lg text-muted-foreground">
-              Our commitment to democratizing network security remains at the core of everything we do as we continue 
-              to grow and expand our capabilities. We believe everyone deserves access to powerful, easy-to-use security tools.
             </p>
           </div>
         </div>

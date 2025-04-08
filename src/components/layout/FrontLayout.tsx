@@ -1,8 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Shield, Twitter, Linkedin, Github } from 'lucide-react';
+import { Shield, Twitter, Linkedin, Github, Menu, X, Phone, Mail, MapPin } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 interface FrontLayoutProps {
   children: React.ReactNode;
@@ -10,6 +17,8 @@ interface FrontLayoutProps {
 
 const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -21,37 +30,125 @@ const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
             <span className="font-bold text-lg">Network Guardian</span>
           </div>
           
-          {/* Navigation links */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <Link to="/">
-              <Button variant="ghost" className={location.pathname === '/' ? 'bg-secondary' : ''}>
-                Home
-              </Button>
-            </Link>
-            <Link to="/features">
-              <Button variant="ghost" className={location.pathname === '/features' ? 'bg-secondary' : ''}>
-                Features
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button variant="ghost" className={location.pathname === '/about' ? 'bg-secondary' : ''}>
-                About
-              </Button>
-            </Link>
-            <Link to="/about-us">
-              <Button variant="ghost" className={location.pathname === '/about-us' ? 'bg-secondary' : ''}>
-                About Us
-              </Button>
-            </Link>
-            <Link to="/contact-us">
-              <Button variant="ghost" className={location.pathname === '/contact-us' ? 'bg-secondary' : ''}>
-                Contact Us
-              </Button>
-            </Link>
-          </nav>
+          {/* Mobile menu */}
+          {isMobile ? (
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[90vh] overflow-y-auto">
+                <div className="p-4 space-y-4">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-6 w-6 text-security-DEFAULT" />
+                      <span className="font-bold text-lg">Network Guardian</span>
+                    </div>
+                    <DrawerClose asChild>
+                      <Button variant="ghost" size="icon">
+                        <X className="h-5 w-5" />
+                      </Button>
+                    </DrawerClose>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <DrawerClose asChild>
+                      <Link to="/" className="block w-full">
+                        <Button variant="ghost" className={`w-full justify-start ${location.pathname === '/' ? 'bg-secondary' : ''}`}>
+                          Home
+                        </Button>
+                      </Link>
+                    </DrawerClose>
+                    <DrawerClose asChild>
+                      <Link to="/features" className="block w-full">
+                        <Button variant="ghost" className={`w-full justify-start ${location.pathname === '/features' ? 'bg-secondary' : ''}`}>
+                          Features
+                        </Button>
+                      </Link>
+                    </DrawerClose>
+                    <DrawerClose asChild>
+                      <Link to="/about" className="block w-full">
+                        <Button variant="ghost" className={`w-full justify-start ${location.pathname === '/about' ? 'bg-secondary' : ''}`}>
+                          About
+                        </Button>
+                      </Link>
+                    </DrawerClose>
+                    <DrawerClose asChild>
+                      <Link to="/about-us" className="block w-full">
+                        <Button variant="ghost" className={`w-full justify-start ${location.pathname === '/about-us' ? 'bg-secondary' : ''}`}>
+                          About Us
+                        </Button>
+                      </Link>
+                    </DrawerClose>
+                    <DrawerClose asChild>
+                      <Link to="/contact-us" className="block w-full">
+                        <Button variant="ghost" className={`w-full justify-start ${location.pathname === '/contact-us' ? 'bg-secondary' : ''}`}>
+                          Contact Us
+                        </Button>
+                      </Link>
+                    </DrawerClose>
+                    <DrawerClose asChild>
+                      <Link to="/dashboard" className="block w-full">
+                        <Button className="w-full justify-center mt-4">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    </DrawerClose>
+                  </div>
+                  
+                  <div className="mt-6 pt-6 border-t border-border/30">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Phone className="h-4 w-4 text-primary" />
+                      <a href="tel:+919876543210" className="text-foreground hover:text-primary transition-colors">+91 98765 43210</a>
+                    </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <a href="mailto:info@networkguardian.in" className="text-foreground hover:text-primary transition-colors">info@networkguardian.in</a>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="text-foreground">GLS University, Ahmedabad, India</span>
+                    </div>
+                  </div>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <>
+              {/* Desktop Navigation links */}
+              <nav className="hidden md:flex items-center space-x-1">
+                <Link to="/">
+                  <Button variant="ghost" className={location.pathname === '/' ? 'bg-secondary' : ''}>
+                    Home
+                  </Button>
+                </Link>
+                <Link to="/features">
+                  <Button variant="ghost" className={location.pathname === '/features' ? 'bg-secondary' : ''}>
+                    Features
+                  </Button>
+                </Link>
+                <Link to="/about">
+                  <Button variant="ghost" className={location.pathname === '/about' ? 'bg-secondary' : ''}>
+                    About
+                  </Button>
+                </Link>
+                <Link to="/about-us">
+                  <Button variant="ghost" className={location.pathname === '/about-us' ? 'bg-secondary' : ''}>
+                    About Us
+                  </Button>
+                </Link>
+                <Link to="/contact-us">
+                  <Button variant="ghost" className={location.pathname === '/contact-us' ? 'bg-secondary' : ''}>
+                    Contact Us
+                  </Button>
+                </Link>
+              </nav>
+            </>
+          )}
           
-          {/* Dashboard link */}
-          <Link to="/dashboard">
+          {/* Dashboard link - always visible */}
+          <Link to="/dashboard" className={isMobile ? "hidden" : ""}>
             <Button>
               Dashboard
             </Button>
@@ -98,10 +195,10 @@ const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
               <div className="mt-6">
                 <h3 className="text-lg font-bold mb-4">Contact</h3>
                 <address className="not-italic text-muted-foreground">
-                  <p>123 Security Street</p>
-                  <p>Network City, NC 12345</p>
-                  <p className="mt-2">Email: info@networkguardian.com</p>
-                  <p>Phone: (123) 456-7890</p>
+                  <p>GLS University, Law Garden</p>
+                  <p>Ahmedabad, Gujarat, India</p>
+                  <p className="mt-2">Email: info@networkguardian.in</p>
+                  <p>Phone: +91 98765 43210</p>
                 </address>
               </div>
             </div>
