@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { apiService, NetworkDevice } from '@/services/apiService';
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -25,7 +25,8 @@ import {
   EyeOff,
   RefreshCw,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Search
 } from 'lucide-react';
 
 interface SuspiciousDeviceInfo {
@@ -49,6 +50,7 @@ const DeviceThreatsPage: React.FC = () => {
   const [suspiciousDevices, setSuspiciousDevices] = useState<NetworkDevice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const suspiciousDeviceTypes: SuspiciousDeviceInfo[] = [
@@ -196,30 +198,24 @@ const DeviceThreatsPage: React.FC = () => {
       const result = await apiService.getNetworkScan(forceRefresh);
       setDevices(result.devices || []);
       
-      // Identify potentially suspicious devices based on indicators
       const suspicious = (result.devices || []).filter(device => {
-        // Check for suspicious open ports
         const hasSuspiciousPorts = device.open_ports?.some(port => 
           [21, 23, 554, 8080, 8443, 8554, 2323].includes(port.port)
         );
         
-        // Check for generic or missing hostname
         const hasGenericHostname = !device.hostname || 
           device.hostname === 'Unknown' || 
           device.hostname.includes('ESP') || 
           device.hostname.includes('Camera');
         
-        // Check for suspicious manufacturer
         const hasSuspiciousManufacturer = device.manufacturer?.includes('Unknown') || 
           device.manufacturer?.includes('Dahua') || 
           device.manufacturer?.includes('Hikvision') || 
           device.manufacturer?.includes('Foscam');
         
-        // Check for unusual OS
         const hasUnusualOS = device.os?.includes('Embedded') || 
           device.os?.includes('Unknown');
         
-        // Combined check
         return hasSuspiciousPorts || 
           (hasGenericHostname && (hasSuspiciousManufacturer || hasUnusualOS));
       });
@@ -272,6 +268,77 @@ const DeviceThreatsPage: React.FC = () => {
         return <Badge variant="outline" className="border-green-400 text-green-400">Low</Badge>;
     }
   };
+
+  const filteredRecommendations = searchQuery.trim() === '' 
+    ? securityRecommendations 
+    : securityRecommendations.filter(rec => 
+        rec.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        rec.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (rec.steps && rec.steps.some(step => step.toLowerCase().includes(searchQuery.toLowerCase())))
+      );
+
+  const securityResources = [
+    {
+      title: "Home Router Security Guide",
+      icon: <Router className="h-5 w-5" />,
+      content: [
+        "Update firmware regularly to patch security vulnerabilities",
+        "Change default admin credentials with strong, unique passwords",
+        "Enable WPA3 encryption for your WiFi network when available",
+        "Create a separate guest network for visitors and IoT devices",
+        "Disable WPS (WiFi Protected Setup) as it can be easily compromised",
+        "Use a strong WiFi password with a mix of characters, numbers, and symbols",
+        "Disable remote management unless absolutely necessary",
+        "Enable the router's firewall and configure it properly",
+        "Check connected devices regularly for unauthorized connections"
+      ]
+    },
+    {
+      title: "IoT Device Security Checklist",
+      icon: <Smartphone className="h-5 w-5" />,
+      content: [
+        "Change default passwords on all IoT devices immediately after setup",
+        "Update firmware regularly as manufacturers release security patches",
+        "Disable unused features and services to reduce attack surface",
+        "Place IoT devices on a separate network/VLAN isolated from sensitive devices",
+        "Disable Universal Plug and Play (UPnP) for devices that don't need it",
+        "Research device security before purchasing (check security track record)",
+        "Review app permissions requested by IoT device companion apps",
+        "Consider privacy implications of devices with cameras and microphones",
+        "Unplug or disconnect smart devices when not in use for extended periods"
+      ]
+    },
+    {
+      title: "Network Monitoring Best Practices",
+      icon: <Eye className="h-5 w-5" />,
+      content: [
+        "Monitor network traffic for unusual patterns or spikes in data usage",
+        "Set up alerts for unauthorized access attempts and suspicious activities",
+        "Keep logs of network activity for at least 90 days for forensic purposes",
+        "Conduct regular network scans to identify all connected devices",
+        "Use traffic analysis tools to identify potential data exfiltration",
+        "Monitor bandwidth usage by device to detect anomalies",
+        "Check for unusual connection times (devices active during odd hours)",
+        "Set up notifications for new devices connecting to your network",
+        "Use a network intrusion detection system (IDS) for continuous monitoring"
+      ]
+    },
+    {
+      title: "Identifying Rogue Devices",
+      icon: <AlertTriangle className="h-5 w-5" />,
+      content: [
+        "Document all authorized devices with MAC addresses and device names",
+        "Look for devices with generic names, missing information, or suspicious manufacturer details",
+        "Scan for common surveillance device ports (554 RTSP, 80/443 HTTP/HTTPS, 23 Telnet)",
+        "Examine devices with unusually high network activity or constant data transmission",
+        "Check for unauthorized access points with similar SSIDs to your network",
+        "Investigate devices that connect to unknown external servers frequently",
+        "Look for hidden cameras using network scanning and physical inspection",
+        "Use specialized tools like WiFi analyzers to detect unauthorized wireless devices",
+        "Consider RF detectors for identifying wireless bugs and surveillance equipment"
+      ]
+    }
+  ];
 
   return (
     <DashboardLayout>
@@ -509,7 +576,17 @@ const DeviceThreatsPage: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="recommendations" className="space-y-4">
-            {securityRecommendations.map((recommendation, index) => (
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search security recommendations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-md"
+              />
+            </div>
+
+            {filteredRecommendations.map((recommendation, index) => (
               <Card key={index}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="flex items-center">
@@ -541,25 +618,28 @@ const DeviceThreatsPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Additional Security Resources</CardTitle>
+                <CardDescription>Comprehensive guides to secure your network and devices</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="justify-start">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Home Router Security Guide
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    IoT Device Security Checklist
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Network Monitoring Best Practices
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Identifying Rogue Devices
-                  </Button>
+                <div className="space-y-6">
+                  {securityResources.map((resource, index) => (
+                    <div key={index} className="mb-6">
+                      <Button variant="outline" className="justify-start w-full mb-3">
+                        {resource.icon}
+                        <span className="ml-2 font-medium">{resource.title}</span>
+                      </Button>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <ul className="space-y-2">
+                          {resource.content.map((item, idx) => (
+                            <li key={idx} className="flex items-start">
+                              <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-security-safe flex-shrink-0" />
+                              <span className="text-sm">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
