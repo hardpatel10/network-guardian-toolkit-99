@@ -26,7 +26,12 @@ import {
   RefreshCw,
   Loader2,
   CheckCircle2,
-  Search
+  Search,
+  Printer,
+  Tv,
+  Network,
+  Globe,
+  Cpu
 } from 'lucide-react';
 
 interface SuspiciousDeviceInfo {
@@ -113,6 +118,66 @@ const DeviceThreatsPage: React.FC = () => {
         'Outdated firmware'
       ],
       icon: <Smartphone className="h-6 w-6 text-security-alert" />
+    },
+    {
+      type: 'Botnet-Infected Device',
+      description: 'These devices have been compromised and are now part of a botnet, used to launch attacks like DDoS or spread malware.',
+      risk: 'high',
+      indicators: [
+        'Random spikes in CPU/network usage',
+        'Frequent connections to blacklisted IPs',
+        'Sudden changes in device behavior',
+        'Communication over non-standard ports'
+      ],
+      icon: <Cpu className="h-6 w-6 text-security-danger" />
+    },
+    {
+      type: 'Man-in-the-Middle (MITM) Device',
+      description: 'Attackers may place rogue devices between you and the network to intercept, modify, or redirect your traffic.',
+      risk: 'high',
+      indicators: [
+        'ARP spoofing (multiple devices claiming the same IP)',
+        'Duplicate IP warnings',
+        'Certificates mismatch on HTTPS sites',
+        'Unexpected DNS changes'
+      ],
+      icon: <Network className="h-6 w-6 text-security-danger" />
+    },
+    {
+      type: 'Fake Network Infrastructure',
+      description: 'Malicious devices can impersonate infrastructure services like DNS or DHCP to redirect traffic or assign wrong settings.',
+      risk: 'high',
+      indicators: [
+        'Unexpected default gateways or DNS servers',
+        'Network instability',
+        'Devices unable to connect or loading incorrect pages',
+        'DNS resolution failures'
+      ],
+      icon: <Globe className="h-6 w-6 text-security-danger" />
+    },
+    {
+      type: 'Unsecured Printers / Scanners',
+      description: 'Office equipment often comes with open ports and default credentials, making them easy entry points.',
+      risk: 'medium',
+      indicators: [
+        'Open ports 9100, 515, 631 (printer services)',
+        'Unchanged default credentials',
+        'Devices with embedded web servers',
+        'Accessible admin panels'
+      ],
+      icon: <Printer className="h-6 w-6 text-security-alert" />
+    },
+    {
+      type: 'Misconfigured Smart TV or Media Device',
+      description: 'Smart TVs, streaming boxes, or voice assistants might be sending telemetry data or exposing open services.',
+      risk: 'medium',
+      indicators: [
+        'Open DLNA, SSDP, or media sharing ports (1900, 8200, 7000)',
+        'Excessive traffic to external servers',
+        'Device responding to multicast requests',
+        'Unnecessary services enabled'
+      ],
+      icon: <Tv className="h-6 w-6 text-security-alert" />
     }
   ];
 
@@ -528,6 +593,51 @@ const DeviceThreatsPage: React.FC = () => {
                       ))}
                     </ul>
                   </div>
+                  
+                  {deviceType.type === 'Botnet-Infected Device' && (
+                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="text-sm font-medium mb-1">Investigation Tip:</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Monitor destination IPs for suspicious geolocations. Use tools like WHOIS or VirusTotal to assess IP reputation.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {deviceType.type === 'Man-in-the-Middle (MITM) Device' && (
+                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="text-sm font-medium mb-1">Investigation Tip:</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Use packet sniffers (like Wireshark) to detect duplicate ARP responses or analyze TLS certificates.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {deviceType.type === 'Fake Network Infrastructure' && (
+                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="text-sm font-medium mb-1">Investigation Tip:</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Check your router's DHCP lease table or run ipconfig /all (Windows) / ifconfig + cat /etc/resolv.conf (Linux) to verify expected settings.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {deviceType.type === 'Unsecured Printers / Scanners' && (
+                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="text-sm font-medium mb-1">Investigation Tip:</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Try accessing the web interface and change default passwords. Disable unnecessary services.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {deviceType.type === 'Misconfigured Smart TV or Media Device' && (
+                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="text-sm font-medium mb-1">Investigation Tip:</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Use nmap or your toolkit to detect unusual media services or UPnP-related ports.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
