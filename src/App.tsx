@@ -13,6 +13,7 @@ import DevicesPage from "./pages/DevicesPage";
 import NetworkPage from "./pages/NetworkPage";
 import SecurityPage from "./pages/SecurityPage";
 import ThreatsPage from "./pages/ThreatsPage";
+import DeviceThreatsPage from "./pages/DeviceThreatsPage";
 import MonitoringPage from "./pages/MonitoringPage";
 import HelpPage from "./pages/HelpPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -100,6 +101,7 @@ const AppContent = () => {
       <Route path="/dashboard/network" element={<NetworkPage />} />
       <Route path="/dashboard/security" element={<SecurityPage />} />
       <Route path="/dashboard/threats" element={<ThreatsPage />} />
+      <Route path="/dashboard/device-threats" element={<DeviceThreatsPage />} />
       <Route path="/dashboard/monitoring" element={<MonitoringPage />} />
       <Route path="/dashboard/help" element={<HelpPage />} />
       <Route path="/dashboard/settings" element={<SettingsPage />} />

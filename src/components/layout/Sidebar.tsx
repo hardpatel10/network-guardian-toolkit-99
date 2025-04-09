@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Wifi, Shield, Database, AlertTriangle, Activity, History, Settings, HelpCircle } from 'lucide-react';
+import { Home, Wifi, Shield, Database, AlertTriangle, Activity, History, Settings, HelpCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -63,6 +63,12 @@ const Sidebar: React.FC = () => {
           label="Threats" 
           path="/dashboard/threats" 
           isActive={currentPath === '/dashboard/threats'} 
+        />
+        <SidebarItem 
+          icon={Eye} 
+          label="Device Threats" 
+          path="/dashboard/device-threats" 
+          isActive={currentPath === '/dashboard/device-threats'} 
         />
         <SidebarItem 
           icon={Activity} 
