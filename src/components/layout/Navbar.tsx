@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Shield, Settings, Bell, Menu, ExternalLink, X, AlertTriangle, Info, Check, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,6 @@ interface Notification {
   read: boolean;
 }
 
-// Sample notifications
 const sampleNotifications: Notification[] = [
   {
     id: '1',
